@@ -1,22 +1,24 @@
 use std::error::Error;
 
+use crate::utils::{extract_digits, extract_operator, extract_whitespace};
+
 pub type ParseError = Box<dyn Error>;
 
 pub trait Parse: Sized {
-    fn parse(input: &str) -> Result<(&str, Self), ParseError>;
+    fn parse(input: &str) -> Result<(String, Self), ParseError>;
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Integer(pub i32);
 
 impl Parse for Integer {
-    fn parse(input: &str) -> Result<(&str, Self), ParseError> {
+    fn parse(input: &str) -> Result<(String, Self), ParseError> {
         let (num, s) = extract_digits(input);
         Ok((s, Integer(num.parse()?)))
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Op {
     Add,
     Sub,
@@ -25,10 +27,10 @@ pub enum Op {
 }
 
 impl Parse for Op {
-    fn parse(input: &str) -> Result<(&str, Self), ParseError> {
+    fn parse(input: &str) -> Result<(String, Self), ParseError> {
         let (s, op) = extract_operator(input);
 
-        let op = match op {
+        let op = match op.as_str() {
             "+" => Op::Add,
             "-" => Op::Sub,
             "*" => Op::Mul,
@@ -40,7 +42,7 @@ impl Parse for Op {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Expr {
     pub lhs: Integer,
     pub op: Op,
@@ -48,31 +50,15 @@ pub struct Expr {
 }
 
 impl Parse for Expr {
-    fn parse(s: &str) -> Result<(&str, Self), ParseError> {
+    fn parse(s: &str) -> Result<(String, Self), ParseError> {
         let (s, lhs) = Integer::parse(s)?;
-        let (s, op) = Op::parse(s)?;
-        let (s, rhs) = Integer::parse(s)?;
+        let (_, s) = extract_whitespace(&s);
+
+        let (s, op) = Op::parse(&s)?;
+        let (_, s) = extract_whitespace(&s);
+
+        let (s, rhs) = Integer::parse(&s)?;
 
         Ok((s, Self { lhs, op, rhs }))
     }
-}
-
-// seq: 123+456
-// parse into: Integer(123), Op::Add, Integer(456)
-pub fn extract_digits(s: &str) -> (&str, &str) {
-    let end = s
-        .char_indices()
-        .find_map(|(i, c)| if c.is_ascii_digit() { None } else { Some(i) })
-        .unwrap_or_else(|| s.len());
-
-    (&s[..end], &s[end..])
-}
-
-pub fn extract_operator(s: &str) -> (&str, &str) {
-    match &s[0..1] {
-        "+" | "-" | "*" | "/" => {}
-        _ => panic!(),
-    };
-
-    (&s[1..], &s[0..1])
 }
