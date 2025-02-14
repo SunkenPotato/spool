@@ -1,3 +1,5 @@
+use crate::END;
+
 pub fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (String, String) {
     let end = s
         .char_indices()
@@ -16,9 +18,9 @@ pub fn extract_whitespace(s: &str) -> (String, String) {
 }
 
 pub fn extract_operator(s: &str) -> (String, String) {
-    match &s[0..1] {
-        "+" | "-" | "*" | "/" => {}
-        e => panic!("Invalid operator: {e}"),
+    match &s.chars().next().unwrap_or(' ') {
+        '+' | '-' | '*' | '/' => {}
+        _ => return (s.into(), "".into()),
     };
 
     ((&s[1..]).into(), (&s[0..1]).into())
@@ -36,4 +38,8 @@ pub fn extract_identifier(s: &str) -> (String, String) {
     } else {
         return (s.into(), "".into());
     }
+}
+
+pub fn extract_end(s: &str) -> (String, String) {
+    take_while(|c| c == END, s)
 }

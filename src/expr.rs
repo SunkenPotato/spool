@@ -43,10 +43,9 @@ impl Parse for Op {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct Expr {
-    pub lhs: Integer,
-    pub op: Op,
-    pub rhs: Integer,
+pub enum Expr {
+    Simple(Integer),
+    Complex { lhs: Integer, op: Op, rhs: Integer },
 }
 
 impl Parse for Expr {
@@ -54,11 +53,18 @@ impl Parse for Expr {
         let (s, lhs) = Integer::parse(s)?;
         let (_, s) = extract_whitespace(&s);
 
-        let (s, op) = Op::parse(&s)?;
+        let (s, op) = match Op::parse(&s) {
+            Ok(v) => v,
+            Err(_) => {
+                return Ok((s, Expr::Simple(lhs)));
+            }
+        };
+        println!("JKL");
+
         let (_, s) = extract_whitespace(&s);
 
         let (s, rhs) = Integer::parse(&s)?;
 
-        Ok((s, Self { lhs, op, rhs }))
+        Ok((s, Self::Complex { lhs, op, rhs }))
     }
 }

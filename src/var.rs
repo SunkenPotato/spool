@@ -1,8 +1,8 @@
 use std::{error::Error, fmt::Display};
 
 use crate::{
-    expr::{Expr, Parse},
-    utils::{extract_identifier, extract_whitespace},
+    expr::{Expr, Parse, ParseError},
+    utils::{extract_end, extract_identifier, extract_whitespace},
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -68,6 +68,11 @@ impl Parse for Binding {
 
         let (_, input) = extract_whitespace(input);
         let (input, expr) = Expr::parse(&input)?;
+
+        let (end, input) = extract_end(&input);
+        if end.chars().next() == None {
+            return Err(ParseError::from("Unexpected end of input"));
+        };
 
         Ok((
             input,

@@ -2,6 +2,11 @@ pub mod expr;
 pub mod utils;
 pub mod var;
 
+mod env;
+mod val;
+
+pub const END: char = ';';
+
 #[cfg(test)]
 mod tests {
     use crate::{
@@ -46,7 +51,7 @@ mod tests {
             Expr::parse("123 + 456").unwrap(),
             (
                 "".into(),
-                Expr {
+                Expr::Complex {
                     lhs: Integer(123),
                     op: Op::Add,
                     rhs: Integer(456),
@@ -63,16 +68,30 @@ mod tests {
     #[test]
     fn parse_binding() {
         assert_eq!(
-            Binding::parse("bind x = 123 + 0").unwrap(),
+            Binding::parse("bind x = 123 + 456;").unwrap(),
             (
                 "".into(),
                 Binding {
                     name: Identifier::new("x".into()),
-                    value: Expr {
+                    value: Expr::Complex {
                         lhs: Integer(123),
                         op: Op::Add,
-                        rhs: Integer(0),
+                        rhs: Integer(456),
                     }
+                }
+            )
+        )
+    }
+
+    #[test]
+    fn parse_simple_binding() {
+        assert_eq!(
+            Binding::parse("bind x = 123;").unwrap(),
+            (
+                "".into(),
+                Binding {
+                    name: Identifier::new("x".into()),
+                    value: Expr::Simple(Integer(123)),
                 }
             )
         )
