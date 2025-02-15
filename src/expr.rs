@@ -172,7 +172,10 @@ mod tests {
 
     #[test]
     fn extract_ident() {
-        assert_eq!(extract_identifier("x 456"), ("x".into(), " 456".into()));
+        assert_eq!(
+            extract_identifier("x 456").unwrap(),
+            ("x".into(), " 456".into())
+        );
     }
 
     #[test]

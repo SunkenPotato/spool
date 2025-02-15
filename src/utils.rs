@@ -26,7 +26,7 @@ pub fn extract_operator(s: &str) -> (String, String) {
     ((&s[1..]).into(), (&s[0..1]).into())
 }
 
-pub fn extract_identifier(s: &str) -> (String, String) {
+pub fn extract_identifier(s: &str) -> Result<(String, String), &'static str> {
     let starts_with_alphabetic = s
         .chars()
         .next()
@@ -34,9 +34,9 @@ pub fn extract_identifier(s: &str) -> (String, String) {
         .unwrap_or(false);
 
     if starts_with_alphabetic {
-        return take_while(|c| c.is_ascii_alphanumeric(), s);
+        return Ok(take_while(|c| c.is_ascii_alphanumeric(), s));
     } else {
-        return (s.into(), "".into());
+        return Err("identifier does not start with an alphabetical character");
     }
 }
 

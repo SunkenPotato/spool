@@ -4,6 +4,7 @@ use crate::{
     env::Env,
     expr::{Expr, Parse, ParseError},
     utils::{extract_end, extract_identifier, extract_whitespace},
+    val::Val,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -14,6 +15,24 @@ pub struct Identifier {
     pub name: String,
 }
 
+impl Display for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+impl<'a> From<&'a str> for Identifier {
+    fn from(value: &'a str) -> Self {
+        Self { name: value.into() }
+    }
+}
+
+impl From<String> for Identifier {
+    fn from(name: String) -> Self {
+        Self { name }
+    }
+}
+
 impl Identifier {
     pub fn new(name: String) -> Self {
         Identifier { name }
@@ -22,7 +41,7 @@ impl Identifier {
 
 impl Parse for Identifier {
     fn parse(input: &str) -> Result<(String, Self), crate::expr::ParseError> {
-        let (s, id) = extract_identifier(input);
+        let (id, s) = extract_identifier(input)?;
         Ok((s, Identifier::new(id)))
     }
 }
@@ -47,7 +66,7 @@ impl Binding {
     }
 
     pub fn eval(&self, env: &mut Env) {
-        env.store_binding(self.name.name.clone(), self.value.eval());
+        env.store_binding(self.name.clone(), self.value.eval());
     }
 }
 
@@ -68,7 +87,7 @@ impl Parse for Binding {
 
         let (_, input) = extract_whitespace(input);
 
-        let (id, input) = extract_identifier(&input);
+        let (id, input) = extract_identifier(&input)?;
         let (_, input) = extract_whitespace(&input);
 
         let input = if input.starts_with(ASSIGN_TOKEN) {
@@ -95,9 +114,32 @@ impl Parse for Binding {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Hash)]
+pub struct BindingRef {
+    pub name: Identifier,
+}
+
+impl Parse for BindingRef {
+    fn parse(input: &str) -> Result<(String, Self), ParseError> {
+        let (input, name) = Identifier::parse(input)?;
+        dbg!(&input, &name);
+        Ok((input, Self { name }))
+    }
+}
+
+impl BindingRef {
+    #[inline]
+    pub fn eval(&self, env: &Env) -> Option<Val> {
+        env.get_binding_val(&self.name)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::expr::{Integer, Op};
+    use crate::{
+        expr::{Integer, Op},
+        val::Val,
+    };
 
     use super::*;
 
@@ -130,6 +172,32 @@ mod tests {
                     value: Expr::Simple(Integer(123)),
                 }
             )
+        )
+    }
+
+    #[test]
+    fn eval_binding_ref() {
+        let mut env = Env::new();
+        env.store_binding("x".into(), Val::Integer(12));
+
+        assert_eq!(
+            BindingRef { name: "x".into() }.eval(&env),
+            Some(Val::Integer(12))
+        )
+    }
+
+    #[test]
+    fn eval_non_existent_ref() {
+        let env = Env::new();
+
+        assert_eq!(BindingRef { name: "x".into() }.eval(&env), None)
+    }
+
+    #[test]
+    fn parse_binding_ref() {
+        assert_eq!(
+            BindingRef { name: "xyz".into() },
+            BindingRef::parse("xyz").unwrap().1
         )
     }
 }

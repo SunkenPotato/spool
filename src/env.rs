@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::val::Val;
+use crate::{val::Val, var::Identifier};
 
 pub struct Env {
-    bindings: HashMap<String, Val>,
+    bindings: HashMap<Identifier, Val>,
 }
 
 impl Env {
@@ -13,7 +13,11 @@ impl Env {
         }
     }
 
-    pub(crate) fn store_binding(&mut self, name: String, value: Val) {
+    pub(crate) fn store_binding(&mut self, name: Identifier, value: Val) {
         self.bindings.insert(name, value);
+    }
+
+    pub fn get_binding_val(&self, name: &Identifier) -> Option<Val> {
+        self.bindings.get(name).cloned()
     }
 }
