@@ -94,3 +94,42 @@ impl Parse for Binding {
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::expr::{Integer, Op};
+
+    use super::*;
+
+    #[test]
+    fn parse_binding() {
+        assert_eq!(
+            Binding::parse("bind x = 123 + 456;").unwrap(),
+            (
+                "".into(),
+                Binding {
+                    name: Identifier::new("x".into()),
+                    value: Expr::Complex {
+                        lhs: Integer(123),
+                        op: Op::Add,
+                        rhs: Integer(456),
+                    }
+                }
+            )
+        )
+    }
+
+    #[test]
+    fn parse_simple_binding() {
+        assert_eq!(
+            Binding::parse("bind x = 123;").unwrap(),
+            (
+                "".into(),
+                Binding {
+                    name: Identifier::new("x".into()),
+                    value: Expr::Simple(Integer(123)),
+                }
+            )
+        )
+    }
+}
