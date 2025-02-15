@@ -1,6 +1,12 @@
-use std::error::Error;
+use std::{
+    error::Error,
+    ops::{Add, Div, Mul, Sub},
+};
 
-use crate::utils::{extract_digits, extract_operator, extract_whitespace};
+use crate::{
+    utils::{extract_digits, extract_operator, extract_whitespace},
+    val::Val,
+};
 
 pub type ParseError = Box<dyn Error>;
 
@@ -10,6 +16,38 @@ pub trait Parse: Sized {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Integer(pub i32);
+
+impl Add for Integer {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Integer(self.0 + other.0)
+    }
+}
+
+impl Sub for Integer {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        Integer(self.0 - other.0)
+    }
+}
+
+impl Mul for Integer {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        Integer(self.0 * other.0)
+    }
+}
+
+impl Div for Integer {
+    type Output = Self;
+
+    fn div(self, other: Self) -> Self {
+        Integer(self.0 / other.0)
+    }
+}
 
 impl Parse for Integer {
     fn parse(input: &str) -> Result<(String, Self), ParseError> {
@@ -48,6 +86,20 @@ pub enum Expr {
     Complex { lhs: Integer, op: Op, rhs: Integer },
 }
 
+impl Expr {
+    pub fn eval(&self) -> Val {
+        match self {
+            Expr::Simple(i) => Val::Integer(i.0),
+            Expr::Complex { lhs, op, rhs } => match op {
+                Op::Add => Val::Integer((*lhs + *rhs).0),
+                Op::Sub => Val::Integer((*lhs - *rhs).0),
+                Op::Mul => Val::Integer((*lhs * *rhs).0),
+                Op::Div => Val::Integer((*lhs / *rhs).0),
+            },
+        }
+    }
+}
+
 impl Parse for Expr {
     fn parse(s: &str) -> Result<(String, Self), ParseError> {
         let (s, lhs) = Integer::parse(s)?;
@@ -59,7 +111,6 @@ impl Parse for Expr {
                 return Ok((s, Expr::Simple(lhs)));
             }
         };
-        println!("JKL");
 
         let (_, s) = extract_whitespace(&s);
 

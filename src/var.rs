@@ -1,6 +1,7 @@
 use std::{error::Error, fmt::Display};
 
 use crate::{
+    env::Env,
     expr::{Expr, Parse, ParseError},
     utils::{extract_end, extract_identifier, extract_whitespace},
 };
@@ -38,6 +39,16 @@ pub enum BindingError {
     ExpectedIdentifier,
     ExpectedAssign,
     ExpectedExpr,
+}
+
+impl Binding {
+    pub fn new(name: Identifier, value: Expr) -> Self {
+        Binding { name, value }
+    }
+
+    pub fn eval(&self, env: &mut Env) {
+        env.store_binding(self.name.name.clone(), self.value.eval());
+    }
 }
 
 impl Error for BindingError {}
