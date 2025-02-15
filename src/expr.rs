@@ -8,12 +8,6 @@ use crate::{
     val::Val,
 };
 
-pub type ParseError = Box<dyn Error>;
-
-pub trait Parse: Sized {
-    fn parse(input: &str) -> Result<(String, Self), ParseError>;
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct Integer(pub i32);
 

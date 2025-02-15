@@ -2,7 +2,8 @@ use std::{error::Error, fmt::Display};
 
 use crate::{
     env::Env,
-    expr::{Expr, Parse, ParseError},
+    expr::Expr,
+    parse::{Parse, ParseOutput},
     utils::{extract_end, extract_identifier, extract_whitespace},
     val::Val,
 };
@@ -40,13 +41,13 @@ impl Identifier {
 }
 
 impl Parse for Identifier {
-    fn parse(input: &str) -> Result<(String, Self), crate::expr::ParseError> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let (id, s) = extract_identifier(input)?;
         Ok((s, Identifier::new(id)))
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Binding {
     pub name: Identifier,
     pub value: Expr,
@@ -78,7 +79,7 @@ impl Display for BindingError {
 }
 
 impl Parse for Binding {
-    fn parse(input: &str) -> Result<(String, Self), crate::expr::ParseError> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let input = if input.starts_with(BIND_TOKEN) {
             &input[4..]
         } else {
@@ -99,10 +100,7 @@ impl Parse for Binding {
         let (_, input) = extract_whitespace(input);
         let (input, expr) = Expr::parse(&input)?;
 
-        let (end, input) = extract_end(&input);
-        if end.chars().next() == None {
-            return Err(ParseError::from("Unexpected end of input"));
-        };
+        let (_, input) = extract_end(&input);
 
         Ok((
             input,
@@ -120,9 +118,8 @@ pub struct BindingRef {
 }
 
 impl Parse for BindingRef {
-    fn parse(input: &str) -> Result<(String, Self), ParseError> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let (input, name) = Identifier::parse(input)?;
-        dbg!(&input, &name);
         Ok((input, Self { name }))
     }
 }

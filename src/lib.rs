@@ -6,6 +6,7 @@ pub mod var;
 
 pub mod block;
 mod env;
+pub mod parse;
 mod val;
 
 pub const END: char = ';';
