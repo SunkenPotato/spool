@@ -1,12 +1,12 @@
 use std::error::Error;
 
+pub mod block;
 pub mod expr;
+pub mod parse;
 pub mod utils;
 pub mod var;
 
-pub mod block;
 mod env;
-pub mod parse;
 mod val;
 
 pub const END: char = ';';

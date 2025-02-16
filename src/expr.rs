@@ -1,9 +1,7 @@
-use std::{
-    error::Error,
-    ops::{Add, Div, Mul, Sub},
-};
+use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
+    parse::{Parse, ParseError, ParseOutput},
     utils::{extract_digits, extract_operator, extract_whitespace},
     val::Val,
 };
@@ -44,7 +42,7 @@ impl Div for Integer {
 }
 
 impl Parse for Integer {
-    fn parse(input: &str) -> Result<(String, Self), ParseError> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let (num, s) = extract_digits(input);
         Ok((s, Integer(num.parse()?)))
     }
@@ -59,7 +57,7 @@ pub enum Op {
 }
 
 impl Parse for Op {
-    fn parse(input: &str) -> Result<(String, Self), ParseError> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let (s, op) = extract_operator(input);
 
         let op = match op.as_str() {
@@ -95,7 +93,7 @@ impl Expr {
 }
 
 impl Parse for Expr {
-    fn parse(s: &str) -> Result<(String, Self), ParseError> {
+    fn parse(s: &str) -> ParseOutput<Self> {
         let (s, lhs) = Integer::parse(s)?;
         let (_, s) = extract_whitespace(&s);
 
