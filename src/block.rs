@@ -1,4 +1,11 @@
-use crate::{parse::Parse, stmt::Stmt};
+use crate::{
+    parse::Parse,
+    stmt::Stmt,
+    utils::{self, extract_whitespace},
+};
+
+const BLOCK_OPEN: &str = "{";
+const BLOCK_CLOSE: &str = "}";
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Block {
@@ -7,7 +14,24 @@ pub struct Block {
 
 impl Parse for Block {
     fn parse(input: &str) -> crate::parse::ParseOutput<Self> {
-        todo!()
+        let input = utils::tag(BLOCK_OPEN, input)?;
+        let (_, input) = extract_whitespace(&input);
+
+        let mut stmts = vec![];
+        let mut input = input;
+
+        while let Ok((new_input, stmt)) = Stmt::parse(&input).inspect_err(|e| {
+            dbg!(e);
+        }) {
+            stmts.push(stmt);
+            input = extract_whitespace(&new_input).1;
+        }
+
+        let (_, input) = extract_whitespace(&input);
+        dbg!(&input);
+        let input = utils::tag(BLOCK_CLOSE, &input)?;
+
+        Ok((input, Self { stmts }))
     }
 }
 

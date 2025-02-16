@@ -97,6 +97,7 @@ impl Expr {
     }
 
     fn parse_simple(input: &str) -> ParseOutput<Self> {
+        dbg!(input);
         Integer::parse(input).map(|(s, int)| (s, Expr::Simple(int)))
     }
 
@@ -114,12 +115,13 @@ impl Expr {
 
 impl Parse for Expr {
     fn parse(input: &str) -> ParseOutput<Self> {
-        Self::parse_simple(input)
+        Block::parse(input)
+            .map(|(input, block)| (input, Expr::Block(block)))
             .or_else(|_| Self::parse_complex(input))
             .or_else(|_| {
-                BindingRef::parse(input).map(|(s, bind_ref)| (s, Expr::BindingRef(bind_ref)))
+                BindingRef::parse(input).map(|(input, r#ref)| (input, Expr::BindingRef(r#ref)))
             })
-            .or_else(|_| Block::parse(input).map(|(s, block)| (s, Expr::Block(block))))
+            .or_else(|_| Self::parse_simple(input))
     }
 }
 

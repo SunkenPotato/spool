@@ -14,7 +14,6 @@ impl Parse for Stmt {
     fn parse(input: &str) -> ParseOutput<Self> {
         Binding::parse(input)
             .map(|(s, binding_def)| (s, Self::Binding(binding_def)))
-            .inspect_err(|e| println!("{e}"))
             .or_else(|_| Expr::parse(input).map(|(s, expr)| (s, Self::Expr(expr))))
     }
 }

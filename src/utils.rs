@@ -1,3 +1,5 @@
+use crate::DynError;
+
 pub fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (String, String) {
     let end = s
         .char_indices()
@@ -35,5 +37,13 @@ pub fn extract_identifier(s: &str) -> Result<(String, String), &'static str> {
         return Ok(take_while(|c| c.is_ascii_alphanumeric(), s));
     } else {
         return Err("identifier does not start with an alphabetical character");
+    }
+}
+
+pub fn tag(word: &str, input: &str) -> DynError<String> {
+    if input.starts_with(word) {
+        Ok(input[word.len()..].into())
+    } else {
+        Err(format!("expected `{}`", word).into())
     }
 }
