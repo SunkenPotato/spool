@@ -56,7 +56,9 @@ mod tests {
                         #[allow(unreachable_code)]
                         Stmt::Binding(crate::var::Binding {
                             name: "y".into(),
-                            value: todo!()
+                            value: crate::expr::Expr::BindingRef(crate::var::BindingRef {
+                                name: "x".into()
+                            })
                         }),
                         Stmt::Expr(crate::expr::Expr::Complex {
                             lhs: Integer(5),
