@@ -2,7 +2,7 @@ use std::{error::Error, fmt::Display};
 
 use crate::{
     env::Env,
-    expr::Expr,
+    expr::{EvalError, Expr},
     parse::{Parse, ParseOutput},
     utils::{extract_identifier, extract_whitespace},
     val::Val,
@@ -66,8 +66,10 @@ impl Binding {
         Binding { name, value }
     }
 
-    pub fn eval(&self, env: &mut Env) {
-        env.store_binding(self.name.clone(), self.value.eval());
+    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        let val = self.value.eval(&env)?;
+        env.store_binding(self.name.clone(), val);
+        Ok(val)
     }
 }
 
@@ -124,7 +126,7 @@ impl Parse for BindingRef {
 
 impl BindingRef {
     #[inline]
-    pub fn eval(&self, env: &Env) -> Option<Val> {
+    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
         env.get_binding_val(&self.name)
     }
 }
@@ -177,7 +179,7 @@ mod tests {
 
         assert_eq!(
             BindingRef { name: "x".into() }.eval(&env),
-            Some(Val::Integer(12))
+            Ok(Val::Integer(12))
         )
     }
 
@@ -185,7 +187,7 @@ mod tests {
     fn eval_non_existent_ref() {
         let env = Env::new();
 
-        assert_eq!(BindingRef { name: "x".into() }.eval(&env), None)
+        assert_ne!(BindingRef { name: "x".into() }.eval(&env), Ok(Val::Unit))
     }
 
     #[test]

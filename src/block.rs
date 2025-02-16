@@ -1,7 +1,10 @@
 use crate::{
+    env::Env,
+    expr::EvalError,
     parse::Parse,
     stmt::Stmt,
     utils::{self, extract_whitespace},
+    val::Val,
 };
 
 const BLOCK_OPEN: &str = "{";
@@ -12,6 +15,25 @@ pub struct Block {
     pub stmts: Vec<Stmt>,
 }
 
+impl Block {
+    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
+        if self.stmts.is_empty() {
+            return Ok(Val::Unit);
+        }
+
+        let mut inner_env = env.clone();
+
+        for stmt in dbg!(&self.stmts[..self.stmts.len() - 1]) {
+            stmt.eval(&mut inner_env)?;
+        }
+
+        match self.stmts.last().unwrap() {
+            Stmt::Binding(_) => Ok(Val::Unit),
+            Stmt::Expr(expr) => expr.eval(&inner_env),
+        }
+    }
+}
+
 impl Parse for Block {
     fn parse(input: &str) -> crate::parse::ParseOutput<Self> {
         let input = utils::tag(BLOCK_OPEN, input)?;
@@ -20,15 +42,13 @@ impl Parse for Block {
         let mut stmts = vec![];
         let mut input = input;
 
-        while let Ok((new_input, stmt)) = Stmt::parse(&input).inspect_err(|e| {
-            dbg!(e);
-        }) {
+        while let Ok((new_input, stmt)) = Stmt::parse(&input) {
             stmts.push(stmt);
             input = extract_whitespace(&new_input).1;
         }
 
         let (_, input) = extract_whitespace(&input);
-        dbg!(&input);
+
         let input = utils::tag(BLOCK_CLOSE, &input)?;
 
         Ok((input, Self { stmts }))
@@ -39,9 +59,11 @@ impl Parse for Block {
 mod tests {
     use crate::{
         block::Block,
+        env::Env,
         expr::{Integer, Op},
         parse::Parse,
         stmt::Stmt,
+        val::Val,
     };
 
     #[test]
@@ -92,6 +114,54 @@ mod tests {
                     ]
                 }
             )
+        )
+    }
+
+    #[test]
+    fn eval_block() {
+        assert_eq!(
+            Block {
+                stmts: vec![
+                    Stmt::Binding(crate::var::Binding {
+                        name: "x".into(),
+                        value: crate::expr::Expr::Simple(Integer(5))
+                    }),
+                    Stmt::Expr(crate::expr::Expr::BindingRef(crate::var::BindingRef {
+                        name: "x".into()
+                    }))
+                ]
+            }
+            .eval(&Env::new()),
+            Ok(Val::Integer(5))
+        )
+    }
+
+    #[test]
+    fn eval_empty_block() {
+        assert_eq!(Block { stmts: vec![] }.eval(&Env::new()), Ok(Val::Unit))
+    }
+
+    #[test]
+    fn eval_block_with_multiple_bindings() {
+        assert_eq!(
+            Block {
+                stmts: vec![
+                    Stmt::Binding(crate::var::Binding {
+                        name: "x".into(),
+                        value: crate::expr::Expr::Simple(Integer(5))
+                    }),
+                    Stmt::Binding(crate::var::Binding {
+                        name: "y".into(),
+                        value: crate::expr::Expr::Simple(Integer(6))
+                    }),
+                    Stmt::Binding(crate::var::Binding {
+                        name: "z".into(),
+                        value: crate::expr::Expr::Simple(Integer(7))
+                    })
+                ]
+            }
+            .eval(&Env::new()),
+            Ok(Val::Unit)
         )
     }
 }

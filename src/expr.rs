@@ -2,6 +2,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crate::{
     block::Block,
+    env::Env,
     parse::{Parse, ParseError, ParseOutput},
     utils::{extract_digits, extract_operator, extract_whitespace},
     val::Val,
@@ -82,9 +83,20 @@ pub enum Expr {
     Block(Block),
 }
 
+// #[derive(Debug, Clone, PartialEq, Eq)]
+pub type EvalError = String;
+
+/*
+impl Error for EvalError {}
+impl Display for EvalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+*/
 impl Expr {
-    pub fn eval(&self) -> Val {
-        match self {
+    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
+        Ok(match self {
             Expr::Simple(i) => Val::Integer(i.0),
             Expr::Complex { lhs, op, rhs } => match op {
                 Op::Add => Val::Integer((*lhs + *rhs).0),
@@ -92,12 +104,12 @@ impl Expr {
                 Op::Mul => Val::Integer((*lhs * *rhs).0),
                 Op::Div => Val::Integer((*lhs / *rhs).0),
             },
-            _ => todo!(),
-        }
+            Expr::BindingRef(b_ref) => b_ref.eval(env)?,
+            Expr::Block(block) => block.eval(env)?,
+        })
     }
 
     fn parse_simple(input: &str) -> ParseOutput<Self> {
-        dbg!(input);
         Integer::parse(input).map(|(s, int)| (s, Expr::Simple(int)))
     }
 
@@ -127,7 +139,7 @@ impl Parse for Expr {
 
 #[cfg(test)]
 mod tests {
-    use crate::{stmt::Stmt, utils::extract_identifier};
+    use crate::{env::Env, stmt::Stmt, utils::extract_identifier};
 
     use super::*;
 
@@ -208,6 +220,20 @@ mod tests {
 
     #[test]
     fn eval_expr() {
-        assert_eq!(Expr::parse("1 + 2").unwrap().1.eval(), Val::Integer(3))
+        assert_eq!(
+            Expr::parse("1 + 2").unwrap().1.eval(&Env::default()),
+            Ok(Val::Integer(3))
+        )
+    }
+
+    #[test]
+    fn eval_binding_ref() {
+        let mut env = Env::new();
+        env.store_binding("x".into(), Val::Integer(10));
+
+        assert_eq!(
+            Expr::BindingRef(BindingRef { name: "x".into() }).eval(&env),
+            Ok(Val::Integer(10))
+        )
     }
 }
