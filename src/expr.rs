@@ -3,10 +3,10 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::{
     block::Block,
     env::Env,
-    parse::{Parse, ParseError, ParseOutput},
     utils::{extract_digits, extract_operator, extract_whitespace},
     val::Val,
     var::BindingRef,
+    Parse, ParseError, ParseOutput,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -86,14 +86,6 @@ pub enum Expr {
 // #[derive(Debug, Clone, PartialEq, Eq)]
 pub type EvalError = String;
 
-/*
-impl Error for EvalError {}
-impl Display for EvalError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-*/
 impl Expr {
     pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
         Ok(match self {

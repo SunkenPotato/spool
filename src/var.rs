@@ -3,9 +3,9 @@ use std::{error::Error, fmt::Display};
 use crate::{
     env::Env,
     expr::{EvalError, Expr},
-    parse::{Parse, ParseOutput},
     utils::{extract_identifier, extract_whitespace},
     val::Val,
+    Parse, ParseOutput,
 };
 
 const BIND_TOKEN: &str = "bind";

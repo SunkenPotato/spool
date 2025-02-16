@@ -1,9 +1,9 @@
 use crate::{
     env::Env,
     expr::{EvalError, Expr},
-    parse::{Parse, ParseOutput},
     val::Val,
     var::Binding,
+    Parse, ParseOutput,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ impl Parse for Stmt {
 
 #[cfg(test)]
 mod tests {
-    use crate::{expr::Integer, parse::Parse, stmt::Stmt};
+    use crate::{expr::Integer, stmt::Stmt, Parse};
 
     #[test]
     fn parse_binding_stmt() {

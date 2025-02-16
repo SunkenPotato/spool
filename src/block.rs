@@ -1,10 +1,10 @@
 use crate::{
     env::Env,
     expr::EvalError,
-    parse::Parse,
     stmt::Stmt,
     utils::{self, extract_whitespace},
     val::Val,
+    Parse, ParseOutput,
 };
 
 const BLOCK_OPEN: &str = "{";
@@ -35,7 +35,7 @@ impl Block {
 }
 
 impl Parse for Block {
-    fn parse(input: &str) -> crate::parse::ParseOutput<Self> {
+    fn parse(input: &str) -> ParseOutput<Self> {
         let input = utils::tag(BLOCK_OPEN, input)?;
         let (_, input) = extract_whitespace(&input);
 
@@ -61,9 +61,9 @@ mod tests {
         block::Block,
         env::Env,
         expr::{Expr, Integer, Op},
-        parse::Parse,
         stmt::Stmt,
         val::Val,
+        Parse,
     };
 
     #[test]
