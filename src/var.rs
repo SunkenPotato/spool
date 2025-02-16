@@ -4,7 +4,7 @@ use crate::{
     env::Env,
     expr::Expr,
     parse::{Parse, ParseOutput},
-    utils::{extract_end, extract_identifier, extract_whitespace},
+    utils::{extract_identifier, extract_whitespace},
     val::Val,
 };
 
@@ -100,8 +100,6 @@ impl Parse for Binding {
         let (_, input) = extract_whitespace(input);
         let (input, expr) = Expr::parse(&input)?;
 
-        let (_, input) = extract_end(&input);
-
         Ok((
             input,
             Self {
@@ -143,7 +141,7 @@ mod tests {
     #[test]
     fn parse_binding() {
         assert_eq!(
-            Binding::parse("bind x = 123 + 456;").unwrap(),
+            Binding::parse("bind x = 123 + 456").unwrap(),
             (
                 "".into(),
                 Binding {
@@ -161,7 +159,7 @@ mod tests {
     #[test]
     fn parse_simple_binding() {
         assert_eq!(
-            Binding::parse("bind x = 123;").unwrap(),
+            Binding::parse("bind x = 123").unwrap(),
             (
                 "".into(),
                 Binding {

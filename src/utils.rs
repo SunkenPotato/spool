@@ -1,5 +1,3 @@
-use crate::END;
-
 pub fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (String, String) {
     let end = s
         .char_indices()
@@ -38,8 +36,4 @@ pub fn extract_identifier(s: &str) -> Result<(String, String), &'static str> {
     } else {
         return Err("identifier does not start with an alphabetical character");
     }
-}
-
-pub fn extract_end(s: &str) -> (String, String) {
-    take_while(|c| c == END, s)
 }

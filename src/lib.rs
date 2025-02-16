@@ -9,5 +9,4 @@ pub mod var;
 mod env;
 mod val;
 
-pub const END: char = ';';
 pub type DynError<T> = Result<T, Box<dyn Error>>;
