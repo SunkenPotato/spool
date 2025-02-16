@@ -1,5 +1,8 @@
 use std::error::Error;
 
+use env::Env;
+use val::Val;
+
 pub mod block;
 pub mod expr;
 pub mod stmt;
@@ -16,4 +19,20 @@ pub type ParseOutput<S> = Result<(String, S), ParseError>;
 
 pub trait Parse: Sized {
     fn parse(input: &str) -> ParseOutput<Self>;
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum EvalError {
+    NotFound(String),
+}
+
+impl std::fmt::Display for EvalError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+impl Error for EvalError {}
+
+pub trait Eval: Sized {
+    fn parse(&self, env: &Env) -> Result<Val, EvalError>;
 }
