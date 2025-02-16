@@ -1,6 +1,6 @@
-use crate::expr::Expr;
+use crate::{expr::Expr, stmt::Stmt};
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Block {
-    pub exprs: Vec<Expr>,
+    pub exprs: Vec<Stmt>,
 }
