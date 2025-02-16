@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn eval_binding_ref() {
-        let mut env = Env::new();
+        let mut env = Env::default();
         env.store_binding("x".into(), Val::Integer(10));
 
         assert_eq!(

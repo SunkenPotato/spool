@@ -21,7 +21,7 @@ impl Block {
             return Ok(Val::Unit);
         }
 
-        let mut inner_env = env.clone();
+        let mut inner_env = dbg!(Env::new(Some(env)));
 
         for stmt in dbg!(&self.stmts[..self.stmts.len() - 1]) {
             stmt.eval(&mut inner_env)?;
@@ -60,7 +60,7 @@ mod tests {
     use crate::{
         block::Block,
         env::Env,
-        expr::{Integer, Op},
+        expr::{Expr, Integer, Op},
         parse::Parse,
         stmt::Stmt,
         val::Val,
@@ -131,14 +131,14 @@ mod tests {
                     }))
                 ]
             }
-            .eval(&Env::new()),
+            .eval(&Env::default()),
             Ok(Val::Integer(5))
         )
     }
 
     #[test]
     fn eval_empty_block() {
-        assert_eq!(Block { stmts: vec![] }.eval(&Env::new()), Ok(Val::Unit))
+        assert_eq!(Block { stmts: vec![] }.eval(&Env::default()), Ok(Val::Unit))
     }
 
     #[test]
@@ -160,8 +160,30 @@ mod tests {
                     })
                 ]
             }
-            .eval(&Env::new()),
+            .eval(&Env::default()),
             Ok(Val::Unit)
+        )
+    }
+
+    #[test]
+    fn eval_with_inheriting() {
+        let mut outer_env = Env::default();
+        outer_env.store_binding("x".into(), Val::Integer(5));
+
+        assert_eq!(
+            Block {
+                stmts: vec![
+                    Stmt::Binding(crate::var::Binding {
+                        name: "y".into(),
+                        value: Expr::BindingRef(crate::var::BindingRef { name: "x".into() })
+                    }),
+                    Stmt::Expr(Expr::BindingRef(crate::var::BindingRef {
+                        name: "y".into()
+                    }))
+                ]
+            }
+            .eval(&outer_env),
+            Ok(Val::Integer(5))
         )
     }
 }

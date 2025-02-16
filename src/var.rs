@@ -174,7 +174,7 @@ mod tests {
 
     #[test]
     fn eval_binding_ref() {
-        let mut env = Env::new();
+        let mut env = Env::default();
         env.store_binding("x".into(), Val::Integer(12));
 
         assert_eq!(
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn eval_non_existent_ref() {
-        let env = Env::new();
+        let env = Env::default();
 
         assert_ne!(BindingRef { name: "x".into() }.eval(&env), Ok(Val::Unit))
     }
