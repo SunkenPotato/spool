@@ -1,5 +1,6 @@
 use crate::{
-    expr::{Expr, Parse, ParseOutput},
+    expr::Expr,
+    parse::{Parse, ParseOutput},
     var::Binding,
 };
 
@@ -20,15 +21,12 @@ impl Parse for Stmt {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        expr::{Integer, Parse},
-        stmt::Stmt,
-    };
+    use crate::{expr::Integer, parse::Parse, stmt::Stmt};
 
     #[test]
     fn parse_binding_stmt() {
         assert_eq!(
-            Stmt::parse("bind x = 5;").unwrap(),
+            Stmt::parse("bind x = 5").unwrap(),
             (
                 "".into(),
                 Stmt::Binding(crate::var::Binding {
@@ -42,7 +40,7 @@ mod tests {
     #[test]
     fn parse_expr_stmt() {
         assert_eq!(
-            Stmt::parse("5;").unwrap(),
+            Stmt::parse("5").unwrap(),
             ("".into(), Stmt::Expr(crate::expr::Expr::Simple(Integer(5))))
         )
     }
