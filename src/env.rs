@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{expr::EvalError, val::Val, var::Identifier};
+use crate::{val::Val, var::Identifier, EvalError};
 
 #[derive(Default, Clone, Debug)]
 pub struct Env<'parent> {
@@ -26,7 +26,12 @@ impl<'a> Env<'a> {
                 env.parent
                     .as_ref()
                     .map(|parent| parent.get_binding_val(name))
-                    .unwrap_or_else(|| Err("Could not find value in environment".into()))
+                    .unwrap_or_else(|| {
+                        Err(EvalError::NotFound(format!(
+                            "Could not find `{:?}` in environment",
+                            name
+                        )))
+                    })
             })
         };
 

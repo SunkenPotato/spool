@@ -2,10 +2,10 @@ use std::{error::Error, fmt::Display};
 
 use crate::{
     env::Env,
-    expr::{EvalError, Expr},
-    parse::{Parse, ParseOutput},
+    expr::Expr,
     utils::{extract_identifier, extract_whitespace},
     val::Val,
+    Eval, EvalError, Parse, ParseOutput,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -67,7 +67,7 @@ impl Binding {
     }
 
     pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
-        let val = self.value.eval(&env)?;
+        let val = self.value.eval(env)?;
         env.store_binding(self.name.clone(), val);
         Ok(val)
     }
