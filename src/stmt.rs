@@ -1,5 +1,8 @@
 use crate::{
-    expr::{Expr, Parse, ParseOutput},
+    env::Env,
+    expr::{EvalError, Expr},
+    parse::{Parse, ParseOutput},
+    val::Val,
     var::Binding,
 };
 
@@ -9,26 +12,31 @@ pub enum Stmt {
     Expr(Expr),
 }
 
+impl Stmt {
+    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        match self {
+            Stmt::Binding(binding) => binding.eval(env),
+            Stmt::Expr(expr) => expr.eval(env),
+        }
+    }
+}
+
 impl Parse for Stmt {
     fn parse(input: &str) -> ParseOutput<Self> {
         Binding::parse(input)
             .map(|(s, binding_def)| (s, Self::Binding(binding_def)))
-            .inspect_err(|e| println!("{e}"))
             .or_else(|_| Expr::parse(input).map(|(s, expr)| (s, Self::Expr(expr))))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        expr::{Integer, Parse},
-        stmt::Stmt,
-    };
+    use crate::{expr::Integer, parse::Parse, stmt::Stmt};
 
     #[test]
     fn parse_binding_stmt() {
         assert_eq!(
-            Stmt::parse("bind x = 5;").unwrap(),
+            Stmt::parse("bind x = 5").unwrap(),
             (
                 "".into(),
                 Stmt::Binding(crate::var::Binding {
@@ -42,7 +50,7 @@ mod tests {
     #[test]
     fn parse_expr_stmt() {
         assert_eq!(
-            Stmt::parse("5;").unwrap(),
+            Stmt::parse("5").unwrap(),
             ("".into(), Stmt::Expr(crate::expr::Expr::Simple(Integer(5))))
         )
     }

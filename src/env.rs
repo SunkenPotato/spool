@@ -1,15 +1,18 @@
 use std::collections::HashMap;
 
-use crate::{val::Val, var::Identifier};
+use crate::{expr::EvalError, val::Val, var::Identifier};
 
-pub struct Env {
+#[derive(Default, Clone, Debug)]
+pub struct Env<'parent> {
     bindings: HashMap<Identifier, Val>,
+    pub parent: Option<&'parent Self>,
 }
 
-impl Env {
-    pub fn new() -> Self {
+impl<'a> Env<'a> {
+    pub fn new<'b: 'a>(parent: Option<&'b Self>) -> Self {
         Env {
             bindings: HashMap::new(),
+            parent,
         }
     }
 
@@ -17,7 +20,16 @@ impl Env {
         self.bindings.insert(name, value);
     }
 
-    pub fn get_binding_val(&self, name: &Identifier) -> Option<Val> {
-        self.bindings.get(name).cloned()
+    pub fn get_binding_val(&self, name: &Identifier) -> Result<Val, EvalError> {
+        let get_val = |env: &Self, name: &Identifier| -> Result<Val, EvalError> {
+            env.bindings.get(name).cloned().map(Ok).unwrap_or_else(|| {
+                env.parent
+                    .as_ref()
+                    .map(|parent| parent.get_binding_val(name))
+                    .unwrap_or_else(|| Err("Could not find value in environment".into()))
+            })
+        };
+
+        get_val(self, name)
     }
 }

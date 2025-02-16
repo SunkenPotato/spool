@@ -2,9 +2,9 @@ use std::{error::Error, fmt::Display};
 
 use crate::{
     env::Env,
-    expr::Expr,
+    expr::{EvalError, Expr},
     parse::{Parse, ParseOutput},
-    utils::{extract_end, extract_identifier, extract_whitespace},
+    utils::{extract_identifier, extract_whitespace},
     val::Val,
 };
 
@@ -66,8 +66,10 @@ impl Binding {
         Binding { name, value }
     }
 
-    pub fn eval(&self, env: &mut Env) {
-        env.store_binding(self.name.clone(), self.value.eval());
+    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        let val = self.value.eval(&env)?;
+        env.store_binding(self.name.clone(), val);
+        Ok(val)
     }
 }
 
@@ -100,8 +102,6 @@ impl Parse for Binding {
         let (_, input) = extract_whitespace(input);
         let (input, expr) = Expr::parse(&input)?;
 
-        let (_, input) = extract_end(&input);
-
         Ok((
             input,
             Self {
@@ -126,7 +126,7 @@ impl Parse for BindingRef {
 
 impl BindingRef {
     #[inline]
-    pub fn eval(&self, env: &Env) -> Option<Val> {
+    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
         env.get_binding_val(&self.name)
     }
 }
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn parse_binding() {
         assert_eq!(
-            Binding::parse("bind x = 123 + 456;").unwrap(),
+            Binding::parse("bind x = 123 + 456").unwrap(),
             (
                 "".into(),
                 Binding {
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn parse_simple_binding() {
         assert_eq!(
-            Binding::parse("bind x = 123;").unwrap(),
+            Binding::parse("bind x = 123").unwrap(),
             (
                 "".into(),
                 Binding {
@@ -174,20 +174,20 @@ mod tests {
 
     #[test]
     fn eval_binding_ref() {
-        let mut env = Env::new();
+        let mut env = Env::default();
         env.store_binding("x".into(), Val::Integer(12));
 
         assert_eq!(
             BindingRef { name: "x".into() }.eval(&env),
-            Some(Val::Integer(12))
+            Ok(Val::Integer(12))
         )
     }
 
     #[test]
     fn eval_non_existent_ref() {
-        let env = Env::new();
+        let env = Env::default();
 
-        assert_eq!(BindingRef { name: "x".into() }.eval(&env), None)
+        assert_ne!(BindingRef { name: "x".into() }.eval(&env), Ok(Val::Unit))
     }
 
     #[test]

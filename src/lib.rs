@@ -3,11 +3,11 @@ use std::error::Error;
 pub mod block;
 pub mod expr;
 pub mod parse;
+pub mod stmt;
 pub mod utils;
 pub mod var;
 
 mod env;
 mod val;
 
-pub const END: char = ';';
 pub type DynError<T> = Result<T, Box<dyn Error>>;

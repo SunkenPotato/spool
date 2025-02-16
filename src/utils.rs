@@ -1,4 +1,4 @@
-use crate::END;
+use crate::DynError;
 
 pub fn take_while(accept: impl Fn(char) -> bool, s: &str) -> (String, String) {
     let end = s
@@ -40,6 +40,10 @@ pub fn extract_identifier(s: &str) -> Result<(String, String), &'static str> {
     }
 }
 
-pub fn extract_end(s: &str) -> (String, String) {
-    take_while(|c| c == END, s)
+pub fn tag(word: &str, input: &str) -> DynError<String> {
+    if input.starts_with(word) {
+        Ok(input[word.len()..].into())
+    } else {
+        Err(format!("expected `{}`", word).into())
+    }
 }
