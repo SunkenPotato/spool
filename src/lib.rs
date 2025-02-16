@@ -34,5 +34,5 @@ impl std::fmt::Display for EvalError {
 impl Error for EvalError {}
 
 pub trait Eval: Sized {
-    fn parse(&self, env: &Env) -> Result<Val, EvalError>;
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError>;
 }

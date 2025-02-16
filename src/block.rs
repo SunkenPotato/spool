@@ -1,10 +1,9 @@
 use crate::{
     env::Env,
-    expr::EvalError,
     stmt::Stmt,
     utils::{self, extract_whitespace},
     val::Val,
-    Parse, ParseOutput,
+    Eval, EvalError, Parse, ParseOutput,
 };
 
 const BLOCK_OPEN: &str = "{";
@@ -15,8 +14,8 @@ pub struct Block {
     pub stmts: Vec<Stmt>,
 }
 
-impl Block {
-    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
+impl Eval for Block {
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
         if self.stmts.is_empty() {
             return Ok(Val::Unit);
         }
@@ -29,7 +28,7 @@ impl Block {
 
         match self.stmts.last().unwrap() {
             Stmt::Binding(_) => Ok(Val::Unit),
-            Stmt::Expr(expr) => expr.eval(&inner_env),
+            Stmt::Expr(expr) => expr.eval(&mut inner_env),
         }
     }
 }
@@ -63,7 +62,7 @@ mod tests {
         expr::{Expr, Integer, Op},
         stmt::Stmt,
         val::Val,
-        Parse,
+        Eval, Parse,
     };
 
     #[test]
@@ -131,14 +130,17 @@ mod tests {
                     }))
                 ]
             }
-            .eval(&Env::default()),
+            .eval(&mut Env::default()),
             Ok(Val::Integer(5))
         )
     }
 
     #[test]
     fn eval_empty_block() {
-        assert_eq!(Block { stmts: vec![] }.eval(&Env::default()), Ok(Val::Unit))
+        assert_eq!(
+            Block { stmts: vec![] }.eval(&mut Env::default()),
+            Ok(Val::Unit)
+        )
     }
 
     #[test]
@@ -160,7 +162,7 @@ mod tests {
                     })
                 ]
             }
-            .eval(&Env::default()),
+            .eval(&mut Env::default()),
             Ok(Val::Unit)
         )
     }
@@ -182,7 +184,7 @@ mod tests {
                     }))
                 ]
             }
-            .eval(&outer_env),
+            .eval(&mut outer_env),
             Ok(Val::Integer(5))
         )
     }

@@ -6,7 +6,7 @@ use crate::{
     utils::{extract_digits, extract_operator, extract_whitespace},
     val::Val,
     var::BindingRef,
-    Parse, ParseError, ParseOutput,
+    Eval, EvalError, Parse, ParseError, ParseOutput,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -83,24 +83,7 @@ pub enum Expr {
     Block(Block),
 }
 
-// #[derive(Debug, Clone, PartialEq, Eq)]
-pub type EvalError = String;
-
 impl Expr {
-    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
-        Ok(match self {
-            Expr::Simple(i) => Val::Integer(i.0),
-            Expr::Complex { lhs, op, rhs } => match op {
-                Op::Add => Val::Integer((*lhs + *rhs).0),
-                Op::Sub => Val::Integer((*lhs - *rhs).0),
-                Op::Mul => Val::Integer((*lhs * *rhs).0),
-                Op::Div => Val::Integer((*lhs / *rhs).0),
-            },
-            Expr::BindingRef(b_ref) => b_ref.eval(env)?,
-            Expr::Block(block) => block.eval(env)?,
-        })
-    }
-
     fn parse_simple(input: &str) -> ParseOutput<Self> {
         Integer::parse(input).map(|(s, int)| (s, Expr::Simple(int)))
     }
@@ -114,6 +97,22 @@ impl Expr {
         let (input, rhs) = Integer::parse(&input)?;
 
         Ok((input, Expr::Complex { lhs, op, rhs }))
+    }
+}
+
+impl Eval for Expr {
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        Ok(match self {
+            Expr::Simple(i) => Val::Integer(i.0),
+            Expr::Complex { lhs, op, rhs } => match op {
+                Op::Add => Val::Integer((*lhs + *rhs).0),
+                Op::Sub => Val::Integer((*lhs - *rhs).0),
+                Op::Mul => Val::Integer((*lhs * *rhs).0),
+                Op::Div => Val::Integer((*lhs / *rhs).0),
+            },
+            Expr::BindingRef(b_ref) => b_ref.eval(env)?,
+            Expr::Block(block) => block.eval(env)?,
+        })
     }
 }
 
@@ -213,7 +212,7 @@ mod tests {
     #[test]
     fn eval_expr() {
         assert_eq!(
-            Expr::parse("1 + 2").unwrap().1.eval(&Env::default()),
+            Expr::parse("1 + 2").unwrap().1.eval(&mut Env::default()),
             Ok(Val::Integer(3))
         )
     }
@@ -224,7 +223,7 @@ mod tests {
         env.store_binding("x".into(), Val::Integer(10));
 
         assert_eq!(
-            Expr::BindingRef(BindingRef { name: "x".into() }).eval(&env),
+            Expr::BindingRef(BindingRef { name: "x".into() }).eval(&mut env),
             Ok(Val::Integer(10))
         )
     }

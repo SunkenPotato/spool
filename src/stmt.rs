@@ -1,10 +1,4 @@
-use crate::{
-    env::Env,
-    expr::{EvalError, Expr},
-    val::Val,
-    var::Binding,
-    Parse, ParseOutput,
-};
+use crate::{env::Env, expr::Expr, val::Val, var::Binding, Eval, EvalError, Parse, ParseOutput};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Stmt {
@@ -12,8 +6,8 @@ pub enum Stmt {
     Expr(Expr),
 }
 
-impl Stmt {
-    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+impl Eval for Stmt {
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
         match self {
             Stmt::Binding(binding) => binding.eval(env),
             Stmt::Expr(expr) => expr.eval(env),
