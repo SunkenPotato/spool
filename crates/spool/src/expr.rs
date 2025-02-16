@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub struct Integer(pub i32);
+pub(crate) struct Integer(pub(crate) i32);
 
 impl Add for Integer {
     type Output = Self;
@@ -52,7 +52,7 @@ impl Parse for Integer {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub enum Op {
+pub(crate) enum Op {
     Add,
     Sub,
     Mul,
@@ -76,7 +76,7 @@ impl Parse for Op {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum Expr {
+pub(crate) enum Expr {
     Simple(Integer),
     Complex { lhs: Integer, op: Op, rhs: Integer },
     BindingRef(BindingRef),

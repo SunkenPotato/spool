@@ -1,7 +1,7 @@
 use crate::{env::Env, expr::Expr, val::Val, var::Binding, Eval, EvalError, Parse, ParseOutput};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Stmt {
+pub(crate) enum Stmt {
     Binding(Binding),
     Expr(Expr),
 }

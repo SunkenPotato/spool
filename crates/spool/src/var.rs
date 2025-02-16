@@ -12,8 +12,8 @@ const BIND_TOKEN: &str = "bind";
 const ASSIGN_TOKEN: &str = "=";
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Identifier {
-    pub name: String,
+pub(crate) struct Identifier {
+    pub(crate) name: String,
 }
 
 impl Display for Identifier {
@@ -35,7 +35,7 @@ impl From<String> for Identifier {
 }
 
 impl Identifier {
-    pub fn new(name: String) -> Self {
+    pub(crate) fn new(name: String) -> Self {
         Identifier { name }
     }
 }
@@ -48,25 +48,19 @@ impl Parse for Identifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Binding {
+pub(crate) struct Binding {
     pub name: Identifier,
     pub value: Expr,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum BindingError {
+pub(crate) enum BindingError {
     ExpectedBind,
-    ExpectedIdentifier,
     ExpectedAssign,
-    ExpectedExpr,
 }
 
-impl Binding {
-    pub fn new(name: Identifier, value: Expr) -> Self {
-        Binding { name, value }
-    }
-
-    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+impl Eval for Binding {
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
         let val = self.value.eval(env)?;
         env.store_binding(self.name.clone(), val);
         Ok(val)
@@ -113,8 +107,8 @@ impl Parse for Binding {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash)]
-pub struct BindingRef {
-    pub name: Identifier,
+pub(crate) struct BindingRef {
+    pub(crate) name: Identifier,
 }
 
 impl Parse for BindingRef {
@@ -124,9 +118,9 @@ impl Parse for BindingRef {
     }
 }
 
-impl BindingRef {
+impl Eval for BindingRef {
     #[inline]
-    pub fn eval(&self, env: &Env) -> Result<Val, EvalError> {
+    fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
         env.get_binding_val(&self.name)
     }
 }
@@ -178,16 +172,19 @@ mod tests {
         env.store_binding("x".into(), Val::Integer(12));
 
         assert_eq!(
-            BindingRef { name: "x".into() }.eval(&env),
+            BindingRef { name: "x".into() }.eval(&mut env),
             Ok(Val::Integer(12))
         )
     }
 
     #[test]
     fn eval_non_existent_ref() {
-        let env = Env::default();
+        let mut env = Env::default();
 
-        assert_ne!(BindingRef { name: "x".into() }.eval(&env), Ok(Val::Unit))
+        assert_ne!(
+            BindingRef { name: "x".into() }.eval(&mut env),
+            Ok(Val::Unit)
+        )
     }
 
     #[test]

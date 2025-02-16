@@ -1,23 +1,25 @@
+pub use env::Env;
+pub use val::Val;
+
 use std::error::Error;
 
-use env::Env;
-use val::Val;
+use stmt::Stmt;
 
-pub mod block;
-pub mod expr;
-pub mod stmt;
-pub mod utils;
-pub mod var;
+pub(crate) mod block;
+pub(crate) mod expr;
+pub(crate) mod stmt;
+pub(crate) mod utils;
+pub(crate) mod var;
 
 mod env;
 mod val;
 
-pub type DynError<T> = Result<T, Box<dyn Error>>;
+pub(crate) type DynError<T> = Result<T, Box<dyn Error>>;
 
-pub type ParseError = Box<dyn Error>;
-pub type ParseOutput<S> = Result<(String, S), ParseError>;
+pub(crate) type ParseError = Box<dyn Error>;
+pub(crate) type ParseOutput<S> = Result<(String, S), ParseError>;
 
-pub trait Parse: Sized {
+pub(crate) trait Parse: Sized {
     fn parse(input: &str) -> ParseOutput<Self>;
 }
 
@@ -33,6 +35,19 @@ impl std::fmt::Display for EvalError {
 }
 impl Error for EvalError {}
 
-pub trait Eval: Sized {
+pub(crate) trait Eval: Sized {
     fn eval(&self, env: &mut Env) -> Result<Val, EvalError>;
+}
+
+#[derive(Debug, Clone)]
+pub struct Parsed(Stmt);
+
+pub fn parse(input: &str) -> Result<Parsed, ParseError> {
+    Ok(Parsed(Stmt::parse(input)?.1))
+}
+
+impl Parsed {
+    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        self.0.eval(env)
+    }
 }

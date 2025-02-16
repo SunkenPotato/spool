@@ -10,8 +10,8 @@ const BLOCK_OPEN: &str = "{";
 const BLOCK_CLOSE: &str = "}";
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
-pub struct Block {
-    pub stmts: Vec<Stmt>,
+pub(crate) struct Block {
+    pub(crate) stmts: Vec<Stmt>,
 }
 
 impl Eval for Block {
@@ -20,9 +20,9 @@ impl Eval for Block {
             return Ok(Val::Unit);
         }
 
-        let mut inner_env = dbg!(Env::new(Some(env)));
+        let mut inner_env = Env::new(Some(env));
 
-        for stmt in dbg!(&self.stmts[..self.stmts.len() - 1]) {
+        for stmt in &self.stmts[..self.stmts.len() - 1] {
             stmt.eval(&mut inner_env)?;
         }
 
