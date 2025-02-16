@@ -1,8 +1,8 @@
 use crate::{parse::Parse, stmt::Stmt};
 
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Block {
-    pub exprs: Vec<Stmt>,
+    pub stmts: Vec<Stmt>,
 }
 
 impl Parse for Block {
@@ -32,7 +32,7 @@ mod tests {
             (
                 "".into(),
                 Block {
-                    exprs: vec![Stmt::Binding(crate::var::Binding {
+                    stmts: vec![Stmt::Binding(crate::var::Binding {
                         name: "x".into(),
                         value: crate::expr::Expr::Simple(Integer(5))
                     })]
@@ -48,7 +48,7 @@ mod tests {
             (
                 "".into(),
                 Block {
-                    exprs: vec![
+                    stmts: vec![
                         Stmt::Binding(crate::var::Binding {
                             name: "x".into(),
                             value: crate::expr::Expr::Simple(Integer(5))
