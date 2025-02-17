@@ -1,6 +1,6 @@
 use crate::{
     lit::{LitReal, Literal, Op},
-    Parse,
+    Eval, Parse,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -20,6 +20,17 @@ impl Parse for MathExpr {
     }
 }
 
+impl Eval for MathExpr {
+    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        Ok(crate::val::Val::Real(match self.op {
+            Op::Add => self.rhs.0 + self.lhs.0,
+            Op::Sub => self.rhs.0 - self.lhs.0,
+            Op::Mul => self.rhs.0 * self.lhs.0,
+            Op::Div => self.rhs.0 / self.lhs.0,
+        }))
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Simple(Literal),
@@ -31,6 +42,15 @@ impl Parse for Expr {
         MathExpr::parse(s)
             .map(|(s, p)| (s, Self::MathExpr(p)))
             .or_else(|_| Literal::parse(s).map(|(s, p)| (s, Self::Simple(p))))
+    }
+}
+
+impl Eval for Expr {
+    fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        match self {
+            Self::Simple(lit) => lit.eval(env),
+            Self::MathExpr(expr) => expr.eval(env),
+        }
     }
 }
 
@@ -67,4 +87,7 @@ mod tests {
             ))
         )
     }
+
+    #[test]
+    fn eval_simple_expr() {}
 }

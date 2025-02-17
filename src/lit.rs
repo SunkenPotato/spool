@@ -1,6 +1,6 @@
 use crate::{
     utils::{extract_float, extract_op, extract_string, extract_whitespace},
-    Parse, ParseError,
+    Eval, Parse, ParseError,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -66,6 +66,15 @@ impl Parse for Literal {
         LitReal::parse(s)
             .map(|(s, p)| (s, Self::Real(p)))
             .or_else(|_| LitStr::parse(s).map(|(s, p)| (s, Self::Str(p))))
+    }
+}
+
+impl Eval for Literal {
+    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        Ok(match self {
+            Self::Str(s) => crate::val::Val::Str(s.0.clone()),
+            Self::Real(r) => crate::val::Val::Real(r.0),
+        })
     }
 }
 

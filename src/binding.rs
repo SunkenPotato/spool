@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     expr::Expr,
     utils::{extract_ident, extract_whitespace, tag},
-    Parse,
+    Eval, Parse,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -18,6 +18,13 @@ impl Parse for Identifier {
         let (id, s) = extract_ident(&s)?;
 
         Ok((s, Self(id)))
+    }
+}
+
+#[cfg(test)]
+impl From<&'_ str> for Identifier {
+    fn from(value: &'_ str) -> Self {
+        Self(value.into())
     }
 }
 
@@ -62,9 +69,15 @@ impl<'b> Parse for Binding<'b> {
     }
 }
 
+impl Eval for Binding<'_> {
+    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        Ok(crate::val::Val::Unit)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{binding::Binding, Parse};
+    use crate::{binding::Binding, env::Env, val::Val, Eval, Parse};
 
     #[test]
     fn parse_binding() {
@@ -77,6 +90,19 @@ mod tests {
                     crate::expr::Expr::Simple(crate::lit::Literal::Str("Hello, world".into()))
                 )
             ))
+        )
+    }
+
+    #[test]
+    fn eval_binding() {
+        assert_eq!(
+            Binding::new(
+                "x".into(),
+                crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+            )
+            .eval(&mut Env::new())
+            .unwrap(),
+            Val::Unit
         )
     }
 }
