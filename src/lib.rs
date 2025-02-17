@@ -1,5 +1,6 @@
 use std::num::{ParseFloatError, ParseIntError};
 
+pub mod expr;
 pub mod lit;
 pub mod utils;
 

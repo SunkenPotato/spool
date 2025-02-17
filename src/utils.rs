@@ -37,7 +37,7 @@ pub fn extract_op(s: &str) -> Result<(String, String), ParseError> {
         }
     };
 
-    Ok((s[..1].into(), s[0..].into()))
+    Ok((s[..1].into(), s[1..].into()))
 }
 
 pub fn tag(seq: &str, s: &str) -> Result<String, ParseError> {
@@ -49,4 +49,10 @@ pub fn tag(seq: &str, s: &str) -> Result<String, ParseError> {
             received: s.into(),
         })
     }
+}
+
+#[cfg(debug_assertions)]
+#[track_caller]
+pub fn dbg<T: std::fmt::Debug>(t: T) {
+    println!("[{}] var = {:?}", std::panic::Location::caller(), t)
 }

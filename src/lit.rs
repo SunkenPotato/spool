@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct LitStr(String);
+pub struct LitStr(pub String);
 
 impl Parse for LitStr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
@@ -28,7 +28,7 @@ impl Into<Literal> for LitStr {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct LitReal(f32);
+pub struct LitReal(pub f32);
 
 impl From<f32> for LitReal {
     fn from(value: f32) -> Self {
