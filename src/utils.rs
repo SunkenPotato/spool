@@ -26,6 +26,20 @@ pub fn extract_float(s: &str) -> (String, String) {
     take_while(s, |c| c.is_ascii_digit() || c == '.')
 }
 
+pub fn extract_op(s: &str) -> Result<(String, String), ParseError> {
+    match s.chars().next() {
+        Some('+' | '-' | '*' | '/') => (),
+        e => {
+            return Err(ParseError::SequenceNotFound {
+                expected: "[+, -, *, /]".into(),
+                received: format!("{e:?}"),
+            })
+        }
+    };
+
+    Ok((s[..1].into(), s[0..].into()))
+}
+
 pub fn tag(seq: &str, s: &str) -> Result<String, ParseError> {
     if s.starts_with(seq) {
         Ok(s[seq.len()..].into())

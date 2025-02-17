@@ -1,5 +1,5 @@
 use crate::{
-    utils::{extract_float, extract_string, extract_whitespace},
+    utils::{extract_float, extract_op, extract_string, extract_whitespace},
     Parse, ParseError,
 };
 
@@ -35,9 +35,38 @@ impl Parse for Literal {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Op {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+impl Parse for Op {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
+        let (_, s) = extract_whitespace(s);
+        let (op, rest) = extract_op(&s)?;
+
+        Ok((
+            rest,
+            match op.as_str() {
+                "+" => Op::Add,
+                "-" => Op::Sub,
+                "*" => Op::Mul,
+                "/" => Op::Div,
+                o => panic!("parser should have returned at this point. received character {o}"),
+            },
+        ))
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{lit::Literal, Parse};
+    use crate::{
+        lit::{Literal, Op},
+        Parse,
+    };
 
     #[test]
     fn parse_string() {
@@ -53,5 +82,10 @@ mod tests {
             Literal::parse("3.1414723"),
             Ok(("".into(), Literal::Float(3.1414723)))
         )
+    }
+
+    #[test]
+    fn parse_op() {
+        assert_eq!(Op::parse("+").unwrap().1, Op::Add)
     }
 }
