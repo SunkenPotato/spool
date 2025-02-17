@@ -40,6 +40,26 @@ pub fn extract_op(s: &str) -> Result<(String, String), ParseError> {
     Ok((s[..1].into(), s[1..].into()))
 }
 
+pub fn extract_ident(s: &str) -> Result<(String, String), ParseError> {
+    let (id, rest) = take_while(s, |c| c.is_ascii_alphanumeric());
+
+    if s.chars()
+        .next()
+        .ok_or(ParseError::SequenceNotFound {
+            expected: "an identifier".into(),
+            received: "".into(),
+        })?
+        .is_ascii_digit()
+    {
+        return Err(ParseError::InvalidSequence {
+            expected: "an identifier not beginning with a digit".into(),
+            received: id.into(),
+        });
+    }
+
+    Ok((id.into(), rest.into()))
+}
+
 pub fn tag(seq: &str, s: &str) -> Result<String, ParseError> {
     if s.starts_with(seq) {
         Ok(s[seq.len()..].into())

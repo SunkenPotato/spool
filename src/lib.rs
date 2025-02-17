@@ -1,5 +1,6 @@
 use std::num::{ParseFloatError, ParseIntError};
 
+pub mod binding;
 pub mod expr;
 pub mod lit;
 pub mod utils;
@@ -9,6 +10,7 @@ pub enum ParseError {
     ParseIntError(ParseIntError),
     ParseFloatError(ParseFloatError),
     SequenceNotFound { expected: String, received: String },
+    InvalidSequence { expected: String, received: String },
 }
 
 pub type ParseOutput<S> = Result<(String, S), ParseError>;
