@@ -4,20 +4,46 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Literal {
-    String(String),
-    Float(f32),
-}
+pub struct LitStr(String);
 
-impl Literal {
-    fn parse_str(s: &str) -> crate::ParseOutput<Self> {
+impl Parse for LitStr {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (_, s) = extract_whitespace(s);
         let (string, rest) = extract_string(&s)?;
 
-        Ok((rest, Literal::String(string)))
+        Ok((rest, LitStr(string)))
     }
+}
 
-    fn parse_float(s: &str) -> crate::ParseOutput<Self> {
+impl<'a> From<&'a str> for LitStr {
+    fn from(value: &'a str) -> Self {
+        Self(value.into())
+    }
+}
+
+impl Into<Literal> for LitStr {
+    fn into(self) -> Literal {
+        Literal::Str(self)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct LitReal(f32);
+
+impl From<f32> for LitReal {
+    fn from(value: f32) -> Self {
+        Self(value)
+    }
+}
+
+impl Into<Literal> for LitReal {
+    fn into(self) -> Literal {
+        Literal::Real(self)
+    }
+}
+
+impl Parse for LitReal {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (_, s) = extract_whitespace(s);
         let (unparsed, rest) = extract_float(&s);
 
@@ -25,13 +51,21 @@ impl Literal {
             .parse()
             .map_err(|e| ParseError::ParseFloatError(e))?;
 
-        Ok((rest, Literal::Float(float)))
+        Ok((rest, LitReal(float)))
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Literal {
+    Str(LitStr),
+    Real(LitReal),
 }
 
 impl Parse for Literal {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        Self::parse_float(s).or_else(|_| Self::parse_str(s))
+        LitReal::parse(s)
+            .map(|(s, p)| (s, Self::Real(p)))
+            .or_else(|_| LitStr::parse(s).map(|(s, p)| (s, Self::Str(p))))
     }
 }
 
@@ -72,7 +106,7 @@ mod tests {
     fn parse_string() {
         assert_eq!(
             Literal::parse(r#""Hello, world""#),
-            Ok(("".into(), Literal::String("Hello, world".into())))
+            Ok(("".into(), Literal::Str("Hello, world".into())))
         )
     }
 
@@ -80,7 +114,7 @@ mod tests {
     fn parse_float() {
         assert_eq!(
             Literal::parse("3.1414723"),
-            Ok(("".into(), Literal::Float(3.1414723)))
+            Ok(("".into(), Literal::Real(3.1414723.into())))
         )
     }
 
