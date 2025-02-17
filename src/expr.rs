@@ -57,9 +57,11 @@ impl Eval for Expr {
 #[cfg(test)]
 mod tests {
     use crate::{
+        env::Env,
         expr::Expr,
         lit::{LitStr, Op},
-        Parse,
+        val::Val,
+        Eval, Parse,
     };
 
     #[test]
@@ -89,5 +91,23 @@ mod tests {
     }
 
     #[test]
-    fn eval_simple_expr() {}
+    fn eval_simple_expr() {
+        assert_eq!(
+            Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))).eval(&mut Env::new()),
+            Ok(Val::Real(5.))
+        )
+    }
+
+    #[test]
+    fn eval_math_expr() {
+        assert_eq!(
+            Expr::MathExpr(crate::expr::MathExpr {
+                lhs: crate::lit::LitReal(5.),
+                op: Op::Mul,
+                rhs: crate::lit::LitReal(6.)
+            })
+            .eval(&mut Env::new()),
+            Ok(Val::Real(30.))
+        )
+    }
 }
