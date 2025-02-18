@@ -70,9 +70,3 @@ pub fn tag(seq: &str, s: &str) -> Result<String, ParseError> {
         })
     }
 }
-
-#[cfg(debug_assertions)]
-#[track_caller]
-pub fn dbg<T: std::fmt::Debug>(t: T) {
-    println!("[{}] var = {:?}", std::panic::Location::caller(), t)
-}
