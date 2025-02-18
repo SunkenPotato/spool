@@ -4,6 +4,7 @@ use env::Env;
 use val::Val;
 
 pub mod binding;
+pub mod block;
 pub mod env;
 pub mod expr;
 pub mod lit;
