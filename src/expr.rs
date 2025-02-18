@@ -93,8 +93,8 @@ mod tests {
     use crate::{
         binding::{Binding, BindingRef},
         env::Env,
-        expr::Expr,
-        lit::{LitStr, Op},
+        expr::{Expr, MathExpr},
+        lit::{LitReal, LitStr, Op},
         val::Val,
         Eval, Parse,
     };
@@ -169,6 +169,36 @@ mod tests {
         assert_eq!(
             Expr::BindingRef(BindingRef { id: "x".into() }).eval(&mut env),
             Ok(Val::Real(25.))
+        )
+    }
+
+    #[test]
+    fn eval_ref_math_expr() {
+        let mut env = Env::new();
+        let _ = Binding::new(
+            "x".into(),
+            Expr::MathExpr(
+                crate::expr::MathExpr {
+                    lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    op: Op::Mul,
+                    rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                }
+                .into(),
+            ),
+        )
+        .eval(&mut env);
+
+        assert_eq!(
+            Expr::MathExpr(
+                MathExpr {
+                    lhs: Expr::BindingRef(BindingRef { id: "x".into() }),
+                    op: Op::Add,
+                    rhs: Expr::Simple(crate::lit::Literal::Real(LitReal(4.)))
+                }
+                .into()
+            )
+            .eval(&mut env),
+            Ok(Val::Real(29.))
         )
     }
 }
