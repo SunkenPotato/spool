@@ -16,3 +16,11 @@ A dynamically typed, interpreted language written in Rust.
 
 ## Docs
 The wiki page is available [here](https://github.com/SunkenPotato/spool/wiki/)
+
+## Download / Usage
+There are no official distributions yet, but you can build it from source.
+You'll require a rust installation and `git`.
+```sh
+$~ git clone https://github.com/SunkenPotato/spool.git
+$~ cargo r --release
+```
