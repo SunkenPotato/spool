@@ -1,6 +1,6 @@
 use crate::{
     utils::{extract_float, extract_op, extract_string, extract_whitespace},
-    Parse, ParseError,
+    Eval, Parse, ParseError,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -69,6 +69,15 @@ impl Parse for Literal {
     }
 }
 
+impl Eval for Literal {
+    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        Ok(match self {
+            Self::Str(s) => crate::val::Val::Str(s.0.clone()),
+            Self::Real(r) => crate::val::Val::Real(r.0),
+        })
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Op {
     Add,
@@ -98,8 +107,9 @@ impl Parse for Op {
 #[cfg(test)]
 mod tests {
     use crate::{
+        env::Env,
         lit::{Literal, Op},
-        Parse,
+        Eval, Parse,
     };
 
     #[test]
@@ -121,5 +131,13 @@ mod tests {
     #[test]
     fn parse_op() {
         assert_eq!(Op::parse("+").unwrap().1, Op::Add)
+    }
+
+    #[test]
+    fn eval_literal() {
+        assert_eq!(
+            Literal::Str("Hello, world!".into()).eval(&mut Env::new()),
+            Ok(crate::val::Val::Str("Hello, world!".into()))
+        )
     }
 }
