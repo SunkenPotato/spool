@@ -3,5 +3,9 @@
 version = 4
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+
+[[package]]
 name = "spool"
 version = "0.1.0"
