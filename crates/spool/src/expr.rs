@@ -66,9 +66,7 @@ pub enum Expr {
 }
 
 impl Parse for Expr {
-    #[track_caller]
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        println!("{}", core::panic::Location::caller());
         MathExpr::parse(s)
             .map(|(s, p)| (s, Self::MathExpr(p.into())))
             .or_else(|_| Literal::parse(s).map(|(s, p)| (s, Self::Simple(p))))

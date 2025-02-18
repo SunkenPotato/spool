@@ -1,16 +1,17 @@
-use std::num::{ParseFloatError, ParseIntError};
+pub use env::Env;
+use stmt::Stmt;
 
-use env::Env;
+use std::num::{ParseFloatError, ParseIntError};
 use val::Val;
 
-pub mod binding;
-pub mod block;
-pub mod env;
-pub mod expr;
-pub mod lit;
-pub mod stmt;
-pub mod utils;
-pub mod val;
+pub(crate) mod binding;
+pub(crate) mod block;
+pub(crate) mod env;
+pub(crate) mod expr;
+pub(crate) mod lit;
+pub(crate) mod stmt;
+pub(crate) mod utils;
+pub(crate) mod val;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseError {
@@ -33,4 +34,18 @@ pub enum EvalError {
 
 pub trait Eval {
     fn eval(&self, env: &mut Env) -> Result<Val, EvalError>;
+}
+
+pub struct Parsed(Stmt);
+
+impl Parsed {
+    pub fn parse(s: &str) -> ParseOutput<Self> {
+        let (s, stmt) = Stmt::parse(s)?;
+
+        Ok((s, Self(stmt)))
+    }
+
+    pub fn eval(&self, env: &mut Env) -> Result<Val, EvalError> {
+        self.0.eval(env)
+    }
 }
