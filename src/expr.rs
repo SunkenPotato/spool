@@ -1,4 +1,5 @@
 use crate::{
+    binding::BindingRef,
     lit::{LitReal, Literal, Op},
     Eval, Parse,
 };
@@ -35,6 +36,7 @@ impl Eval for MathExpr {
 pub enum Expr {
     Simple(Literal),
     MathExpr(MathExpr),
+    BindingRef(BindingRef),
 }
 
 impl Parse for Expr {
@@ -42,6 +44,7 @@ impl Parse for Expr {
         MathExpr::parse(s)
             .map(|(s, p)| (s, Self::MathExpr(p)))
             .or_else(|_| Literal::parse(s).map(|(s, p)| (s, Self::Simple(p))))
+            .or_else(|_| BindingRef::parse(s).map(|(s, p)| (s, Self::BindingRef(p))))
     }
 }
 
@@ -50,6 +53,7 @@ impl Eval for Expr {
         match self {
             Self::Simple(lit) => lit.eval(env),
             Self::MathExpr(expr) => expr.eval(env),
+            Self::BindingRef(b_ref) => b_ref.eval(env),
         }
     }
 }
@@ -57,9 +61,12 @@ impl Eval for Expr {
 #[cfg(test)]
 mod tests {
     use crate::{
+        binding::{Binding, BindingRef},
+        env::Env,
         expr::Expr,
         lit::{LitStr, Op},
-        Parse,
+        val::Val,
+        Eval, Parse,
     };
 
     #[test]
@@ -89,5 +96,43 @@ mod tests {
     }
 
     #[test]
-    fn eval_simple_expr() {}
+    fn eval_simple_expr() {
+        assert_eq!(
+            Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))).eval(&mut Env::new()),
+            Ok(Val::Real(5.))
+        )
+    }
+
+    #[test]
+    fn eval_math_expr() {
+        assert_eq!(
+            Expr::MathExpr(crate::expr::MathExpr {
+                lhs: crate::lit::LitReal(5.),
+                op: Op::Mul,
+                rhs: crate::lit::LitReal(6.)
+            })
+            .eval(&mut Env::new()),
+            Ok(Val::Real(30.))
+        )
+    }
+
+    #[test]
+    fn eval_ref_expr() {
+        let mut env = Env::new();
+
+        let _ = Binding::new(
+            "x".into(),
+            Expr::MathExpr(super::MathExpr {
+                lhs: crate::lit::LitReal(5.),
+                op: Op::Div,
+                rhs: crate::lit::LitReal(5.),
+            }),
+        )
+        .eval(&mut env);
+
+        assert_eq!(
+            Expr::BindingRef(BindingRef { id: "x".into() }).eval(&mut env),
+            Ok(Val::Real(1.))
+        )
+    }
 }

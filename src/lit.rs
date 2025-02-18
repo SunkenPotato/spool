@@ -107,8 +107,9 @@ impl Parse for Op {
 #[cfg(test)]
 mod tests {
     use crate::{
+        env::Env,
         lit::{Literal, Op},
-        Parse,
+        Eval, Parse,
     };
 
     #[test]
@@ -130,5 +131,13 @@ mod tests {
     #[test]
     fn parse_op() {
         assert_eq!(Op::parse("+").unwrap().1, Op::Add)
+    }
+
+    #[test]
+    fn eval_literal() {
+        assert_eq!(
+            Literal::Str("Hello, world!".into()).eval(&mut Env::new()),
+            Ok(crate::val::Val::Str("Hello, world!".into()))
+        )
     }
 }

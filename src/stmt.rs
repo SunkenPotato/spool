@@ -22,3 +22,20 @@ impl Eval for Stmt<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{binding::Binding, env::Env, stmt::Stmt, val::Val, Eval};
+
+    #[test]
+    fn eval_binding_stmt() {
+        assert_eq!(
+            Stmt::Binding(Binding::new(
+                "x".into(),
+                crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(0.)))
+            ))
+            .eval(&mut Env::new()),
+            Ok(Val::Unit)
+        )
+    }
+}

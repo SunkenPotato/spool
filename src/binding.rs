@@ -9,7 +9,7 @@ use crate::{
 const BIND_TOKEN: &str = "bind";
 const ASSIGN_TOKEN: &str = "=";
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Identifier(pub String);
 
 impl Parse for Identifier {
@@ -70,14 +70,41 @@ impl<'b> Parse for Binding<'b> {
 }
 
 impl Eval for Binding<'_> {
-    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+    fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        let val = self.expr.eval(env)?;
+
+        env.store_binding(self.ident.clone(), val);
         Ok(crate::val::Val::Unit)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BindingRef {
+    pub id: Identifier,
+}
+
+impl Parse for BindingRef {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
+        let (s, id) = Identifier::parse(s)?;
+        Ok((s, Self { id }))
+    }
+}
+
+impl Eval for BindingRef {
+    #[inline]
+    fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        env.get_stored_binding(&self.id)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{binding::Binding, env::Env, val::Val, Eval, Parse};
+    use crate::{
+        binding::{Binding, BindingRef},
+        env::Env,
+        val::Val,
+        Eval, Parse,
+    };
 
     #[test]
     fn parse_binding() {
@@ -103,6 +130,18 @@ mod tests {
             .eval(&mut Env::new())
             .unwrap(),
             Val::Unit
+        )
+    }
+
+    #[test]
+    fn eval_binding_ref() {
+        let mut env = Env::new();
+
+        env.store_binding("x".into(), Val::Real(5.));
+
+        assert_eq!(
+            BindingRef { id: "x".into() }.eval(&mut env),
+            Ok(Val::Real(5.))
         )
     }
 }

@@ -25,7 +25,9 @@ pub trait Parse: Sized {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum EvalError {}
+pub enum EvalError {
+    IdentifierNotFound,
+}
 
 pub trait Eval {
     fn eval(&self, env: &mut Env) -> Result<Val, EvalError>;
