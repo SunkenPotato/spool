@@ -1,12 +1,12 @@
 use crate::{binding::Binding, expr::Expr, Eval, Parse};
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Stmt<'s> {
-    Binding(Binding<'s>),
+pub enum Stmt {
+    Binding(Binding),
     Expr(Expr),
 }
 
-impl Parse for Stmt<'_> {
+impl Parse for Stmt {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         Binding::parse(s)
             .map(|(s, p)| (s, Self::Binding(p)))
@@ -14,7 +14,7 @@ impl Parse for Stmt<'_> {
     }
 }
 
-impl Eval for Stmt<'_> {
+impl Eval for Stmt {
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         match self {
             Self::Binding(b) => b.eval(env),

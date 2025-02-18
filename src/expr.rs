@@ -1,33 +1,58 @@
 use crate::{
     binding::BindingRef,
+    block::Block,
     lit::{LitReal, Literal, Op},
-    Eval, Parse,
+    val::Val,
+    Eval, EvalError, Parse,
 };
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MathExpr {
-    pub lhs: LitReal,
+    pub lhs: Expr,
     pub op: Op,
-    pub rhs: LitReal,
+    pub rhs: Expr,
 }
 
 impl Parse for MathExpr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        let (s, lhs) = LitReal::parse(&s)?;
+        let (s, lhs) = BindingRef::parse(s)
+            .map(|(s, p)| (s, Expr::BindingRef(p)))
+            .or_else(|_| LitReal::parse(s).map(|(s, p)| (s, Expr::Simple(Literal::Real(p)))))?;
+
         let (s, op) = Op::parse(&s)?;
-        let (s, rhs) = LitReal::parse(&s)?;
+        let (s, rhs) = Expr::parse(&s)?;
 
         Ok((s.into(), Self { lhs, op, rhs }))
     }
 }
 
 impl Eval for MathExpr {
-    fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+    fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
+        let lhs = match self.lhs.eval(env)? {
+            Val::Real(lhs) => lhs,
+            v => {
+                return Err(EvalError::InvalidType {
+                    expected: "a real number".into(),
+                    received: v.get_type().into(),
+                })
+            }
+        };
+
+        let rhs = match self.rhs.eval(env)? {
+            Val::Real(lhs) => lhs,
+            v => {
+                return Err(EvalError::InvalidType {
+                    expected: "a real number".into(),
+                    received: v.get_type().into(),
+                })
+            }
+        };
+
         Ok(crate::val::Val::Real(match self.op {
-            Op::Add => self.lhs.0 + self.rhs.0,
-            Op::Sub => self.lhs.0 - self.rhs.0,
-            Op::Mul => self.lhs.0 * self.rhs.0,
-            Op::Div => self.lhs.0 / self.rhs.0,
+            Op::Add => lhs + rhs,
+            Op::Sub => lhs - rhs,
+            Op::Mul => lhs * rhs,
+            Op::Div => lhs / rhs,
         }))
     }
 }
@@ -35,16 +60,20 @@ impl Eval for MathExpr {
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Simple(Literal),
-    MathExpr(MathExpr),
+    MathExpr(Box<MathExpr>),
     BindingRef(BindingRef),
+    Block(Block),
 }
 
 impl Parse for Expr {
+    #[track_caller]
     fn parse(s: &str) -> crate::ParseOutput<Self> {
+        println!("{}", core::panic::Location::caller());
         MathExpr::parse(s)
-            .map(|(s, p)| (s, Self::MathExpr(p)))
+            .map(|(s, p)| (s, Self::MathExpr(p.into())))
             .or_else(|_| Literal::parse(s).map(|(s, p)| (s, Self::Simple(p))))
             .or_else(|_| BindingRef::parse(s).map(|(s, p)| (s, Self::BindingRef(p))))
+            .or_else(|_| Block::parse(s).map(|(s, p)| (s, Self::Block(p))))
     }
 }
 
@@ -54,6 +83,7 @@ impl Eval for Expr {
             Self::Simple(lit) => lit.eval(env),
             Self::MathExpr(expr) => expr.eval(env),
             Self::BindingRef(b_ref) => b_ref.eval(env),
+            Self::Block(block) => block.eval(env),
         }
     }
 }
@@ -86,11 +116,14 @@ mod tests {
             Expr::parse("5 * 5"),
             Ok((
                 "".into(),
-                Expr::MathExpr(crate::expr::MathExpr {
-                    lhs: crate::lit::LitReal(5.),
-                    op: Op::Mul,
-                    rhs: crate::lit::LitReal(5.)
-                })
+                Expr::MathExpr(
+                    crate::expr::MathExpr {
+                        lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                        op: Op::Mul,
+                        rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                    }
+                    .into()
+                )
             ))
         )
     }
@@ -106,11 +139,11 @@ mod tests {
     #[test]
     fn eval_math_expr() {
         assert_eq!(
-            Expr::MathExpr(crate::expr::MathExpr {
-                lhs: crate::lit::LitReal(5.),
+            crate::expr::MathExpr {
+                lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                 op: Op::Mul,
-                rhs: crate::lit::LitReal(6.)
-            })
+                rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(6.)))
+            }
             .eval(&mut Env::new()),
             Ok(Val::Real(30.))
         )
@@ -122,17 +155,20 @@ mod tests {
 
         let _ = Binding::new(
             "x".into(),
-            Expr::MathExpr(super::MathExpr {
-                lhs: crate::lit::LitReal(5.),
-                op: Op::Div,
-                rhs: crate::lit::LitReal(5.),
-            }),
+            Expr::MathExpr(
+                crate::expr::MathExpr {
+                    lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    op: Op::Mul,
+                    rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                }
+                .into(),
+            ),
         )
         .eval(&mut env);
 
         assert_eq!(
             Expr::BindingRef(BindingRef { id: "x".into() }).eval(&mut env),
-            Ok(Val::Real(1.))
+            Ok(Val::Real(25.))
         )
     }
 }

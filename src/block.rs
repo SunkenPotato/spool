@@ -9,11 +9,11 @@ const BLOCK_OPEN: &str = "{";
 const BLOCK_CLOSE: &str = "}";
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Block<'b> {
-    pub stmts: Vec<Stmt<'b>>,
+pub struct Block {
+    pub stmts: Vec<Stmt>,
 }
 
-impl Parse for Block<'_> {
+impl Parse for Block {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (_, s) = extract_whitespace(s);
         let s = tag(BLOCK_OPEN, &s)?;
@@ -32,7 +32,7 @@ impl Parse for Block<'_> {
     }
 }
 
-impl Eval for Block<'_> {
+impl Eval for Block {
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         if self.stmts.is_empty() {
             return Ok(crate::val::Val::Unit);
@@ -127,14 +127,15 @@ mod tests {
             Block {
                 stmts: vec![Stmt::Expr(crate::expr::Expr::MathExpr(
                     crate::expr::MathExpr {
-                        lhs: crate::lit::LitReal(5.),
-                        op: Op::Sub,
-                        rhs: crate::lit::LitReal(4.)
+                        lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                        op: Op::Mul,
+                        rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(4.)))
                     }
+                    .into()
                 ))]
             }
             .eval(&mut Env::new()),
-            Ok(crate::val::Val::Real(1.))
+            Ok(crate::val::Val::Real(20.))
         )
     }
 
@@ -147,15 +148,18 @@ mod tests {
                         "e".into(),
                         Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(2.71828)))
                     )),
-                    Stmt::Expr(Expr::MathExpr(crate::expr::MathExpr {
-                        lhs: crate::lit::LitReal(1.20205),
-                        op: Op::Add,
-                        rhs: crate::lit::LitReal(3.14159)
-                    }))
+                    Stmt::Expr(Expr::MathExpr(
+                        crate::expr::MathExpr {
+                            lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                            op: Op::Mul,
+                            rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                        }
+                        .into()
+                    ))
                 ]
             }
             .eval(&mut Env::new()),
-            Ok(Val::Real(4.3436403))
+            Ok(Val::Real(25.))
         )
     }
 

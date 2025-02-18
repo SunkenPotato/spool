@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use crate::{
     expr::Expr,
     utils::{extract_ident, extract_whitespace, tag},
@@ -36,24 +34,19 @@ impl From<&'_ str> for Identifier {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Binding<'b> {
+pub struct Binding {
     pub ident: Identifier,
     pub expr: Expr,
-    _p: PhantomData<&'b ()>,
 }
 
-impl Binding<'_> {
+impl Binding {
     #[cfg(test)]
     pub fn new(ident: Identifier, expr: Expr) -> Self {
-        Self {
-            ident,
-            expr,
-            _p: PhantomData,
-        }
+        Self { ident, expr }
     }
 }
 
-impl<'b> Parse for Binding<'b> {
+impl Parse for Binding {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (_, s) = extract_whitespace(s);
         let s = tag(BIND_TOKEN, &s)?;
@@ -65,18 +58,11 @@ impl<'b> Parse for Binding<'b> {
 
         let (s, expr) = Expr::parse(&s)?;
 
-        Ok((
-            s,
-            Binding {
-                ident,
-                expr,
-                _p: PhantomData,
-            },
-        ))
+        Ok((s, Binding { ident, expr }))
     }
 }
 
-impl Eval for Binding<'_> {
+impl Eval for Binding {
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         let val = self.expr.eval(env)?;
 

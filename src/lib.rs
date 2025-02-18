@@ -28,6 +28,7 @@ pub trait Parse: Sized {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EvalError {
     IdentifierNotFound,
+    InvalidType { expected: String, received: String },
 }
 
 pub trait Eval {
