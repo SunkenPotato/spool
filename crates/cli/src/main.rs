@@ -1,10 +1,16 @@
+mod command;
+
 use std::io::{self, Write};
 
+use command::{register_default_commands, CommandRegistry};
 use spool::{Env, Parsed};
 
 const PROMPT: &str = "→ ";
 
 fn main() -> io::Result<()> {
+    let mut command_registry = CommandRegistry::default();
+    register_default_commands(&mut command_registry);
+
     let stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut stderr = io::stderr();
@@ -23,8 +29,11 @@ fn main() -> io::Result<()> {
             continue;
         }
 
-        if input == "/exit" {
-            break;
+        if let Ok(returns) = command_registry.execute(&input, &mut env) {
+            match returns {
+                command::CommandReturns::Exit => return Ok(()),
+                _ => (),
+            }
         }
 
         let (s, parsed) = match Parsed::parse(&input) {
@@ -54,6 +63,4 @@ fn main() -> io::Result<()> {
         write!(stdout, "{:?}\n", eval)?;
         stdout.flush()?;
     }
-
-    Ok(())
 }
