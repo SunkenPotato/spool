@@ -32,7 +32,7 @@ fn main() -> io::Result<()> {
         if let Ok(returns) = command_registry.execute(&input, &mut env) {
             match returns {
                 command::CommandReturns::Exit => return Ok(()),
-                _ => (),
+                _ => continue,
             }
         }
 

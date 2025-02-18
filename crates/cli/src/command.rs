@@ -6,8 +6,9 @@ pub struct CommandRegistry {
 }
 
 impl CommandRegistry {
-    pub fn register(&mut self, c: Command) {
-        self.commands.push(c)
+    pub fn register(&mut self, c: Command) -> &mut Self {
+        self.commands.push(c);
+        self
     }
 
     pub fn execute(&self, id: &String, env: &mut Env) -> Result<CommandReturns, ()> {
@@ -41,6 +42,10 @@ impl Command {
 
 pub(super) fn register_default_commands(reg: &mut CommandRegistry) {
     let exit_command = Command::new("exit", |_| CommandReturns::Exit);
+    let clr_env_cmd = Command::new("clr-env", |e| {
+        e.bindings.clear();
+        CommandReturns::None
+    });
 
-    reg.register(exit_command);
+    reg.register(exit_command).register(clr_env_cmd);
 }
