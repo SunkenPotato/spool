@@ -46,6 +46,12 @@ pub(super) fn register_default_commands(reg: &mut CommandRegistry) {
         e.bindings.clear();
         CommandReturns::None
     });
+    let help_command = Command::new("help", |_| {
+        let _ = open::that("https://github.com/SunkenPotato/spool/wiki/CLI");
+        CommandReturns::None
+    });
 
-    reg.register(exit_command).register(clr_env_cmd);
+    reg.register(exit_command)
+        .register(clr_env_cmd)
+        .register(help_command);
 }
