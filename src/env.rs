@@ -20,8 +20,8 @@ impl<'p> Env<'p> {
         }
     }
 
-    pub fn store_binding(&mut self, id: Identifier, expr: Val) {
-        self.bindings.insert(id, expr);
+    pub fn store_binding(&mut self, id: Identifier, val: Val) {
+        self.bindings.insert(id, val);
     }
 
     pub fn get_stored_binding(&self, id: &Identifier) -> Result<Val, EvalError> {

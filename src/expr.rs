@@ -24,10 +24,10 @@ impl Parse for MathExpr {
 impl Eval for MathExpr {
     fn eval(&self, _env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         Ok(crate::val::Val::Real(match self.op {
-            Op::Add => self.rhs.0 + self.lhs.0,
-            Op::Sub => self.rhs.0 - self.lhs.0,
-            Op::Mul => self.rhs.0 * self.lhs.0,
-            Op::Div => self.rhs.0 / self.lhs.0,
+            Op::Add => self.lhs.0 + self.rhs.0,
+            Op::Sub => self.lhs.0 - self.rhs.0,
+            Op::Mul => self.lhs.0 * self.rhs.0,
+            Op::Div => self.lhs.0 / self.rhs.0,
         }))
     }
 }

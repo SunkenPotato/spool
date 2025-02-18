@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use crate::{
     expr::Expr,
     utils::{extract_ident, extract_whitespace, tag},
-    Eval, Parse,
+    Eval, Parse, ParseError,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -16,6 +16,13 @@ impl Parse for Identifier {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (_, s) = extract_whitespace(s);
         let (id, s) = extract_ident(&s)?;
+
+        if id.is_empty() {
+            return Err(ParseError::SequenceNotFound {
+                expected: "valid identifier".into(),
+                received: id.into(),
+            });
+        }
 
         Ok((s, Self(id)))
     }
@@ -37,7 +44,7 @@ pub struct Binding<'b> {
 
 impl Binding<'_> {
     #[cfg(test)]
-    pub(crate) fn new(ident: Identifier, expr: Expr) -> Self {
+    pub fn new(ident: Identifier, expr: Expr) -> Self {
         Self {
             ident,
             expr,
