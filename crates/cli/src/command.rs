@@ -1,21 +1,15 @@
 use serde::Deserialize;
 
-use crate::AppState;
+use crate::{AppState, ASSET_PATH};
 use std::{
     collections::HashMap,
-    env::current_exe,
     fs::File,
     io::{Read, Write},
-    path::PathBuf,
+    path::Path,
     sync::LazyLock,
 };
 
-static DOC_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut p = current_exe().unwrap();
-    p.pop();
-    p.push("commands.json");
-    p
-});
+pub static DOC_PATH: LazyLock<String> = LazyLock::new(|| format!("{}/commands.json", &*ASSET_PATH));
 
 pub struct CommandRegistry {
     commands: Vec<Command>,
@@ -30,14 +24,15 @@ pub struct CommandMeta {
 impl CommandRegistry {
     pub fn new() -> std::io::Result<Self> {
         let input = || {
-            let file = File::open(&*DOC_PATH).ok();
+            let mut file = match File::open(Path::new(&*DOC_PATH)) {
+                Ok(v) => v,
+                Err(_) => {
+                    return String::new();
+                }
+            };
 
             let mut buf = String::new();
-            let _ = match file {
-                Some(v) => v,
-                None => return String::new(),
-            }
-            .read_to_string(&mut buf);
+            let _ = file.read_to_string(&mut buf);
             buf
         };
         let command_meta: HashMap<String, CommandMeta> =

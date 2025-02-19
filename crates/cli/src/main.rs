@@ -8,6 +8,17 @@ use spool::{Env, Parsed};
 const PROMPT: &str = "→ ";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[cfg(all(any(target_os = "linux", target_os = "macos"), not(debug_assertions)))]
+pub static ASSET_PATH: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+    "~/.local/share/spool"
+        .to_string()
+        .replace("~", &std::env::var("HOME").unwrap())
+});
+#[cfg(all(any(target_os = "linux", target_os = "macos"), debug_assertions))]
+pub const ASSET_PATH: &str = "../../assets/";
+#[cfg(target_os = "windows")]
+const ASSET_PATH: &str = compile_error!("Windows is not supported yet");
+
 pub(crate) struct AppState<'e> {
     pub(crate) stdin: Stdin,
     pub(crate) stdout: Stdout,
