@@ -1,0 +1,11 @@
+{
+  "/exit": {
+    "doc": "Exit the application"
+  },
+  "/clr-env": {
+    "doc": "Clears the environment"
+  },
+  "/help": {
+    "doc": "Displays this information"
+  }
+}
