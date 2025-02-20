@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn parse_func() {
         assert_eq!(
-            Stmt::parse("func fn(x) => { x }"),
+            Stmt::parse("func fn(x) => x"),
             Ok((
                 "".into(),
                 Stmt::Func(FuncDef {
