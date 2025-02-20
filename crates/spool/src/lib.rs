@@ -8,10 +8,13 @@ pub(crate) mod binding;
 pub(crate) mod block;
 pub(crate) mod env;
 pub(crate) mod expr;
+pub mod func;
 pub(crate) mod lit;
 pub(crate) mod stmt;
 pub(crate) mod utils;
 pub(crate) mod val;
+
+const KEYWORDS: &[&str] = &["func", "bind"];
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseError {

@@ -1,7 +1,7 @@
 use crate::{
     expr::Expr,
     utils::{extract_ident, extract_whitespace, tag},
-    Eval, Parse, ParseError,
+    Eval, Parse, ParseError, KEYWORDS,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -15,7 +15,7 @@ impl Parse for Identifier {
         let (_, s) = extract_whitespace(s);
         let (id, s) = extract_ident(&s)?;
 
-        if id.is_empty() {
+        if id.is_empty() || KEYWORDS.contains(&id.as_str()) {
             return Err(ParseError::SequenceNotFound {
                 expected: "valid identifier".into(),
                 received: id.into(),

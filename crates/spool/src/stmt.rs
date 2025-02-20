@@ -1,9 +1,10 @@
-use crate::{binding::Binding, expr::Expr, Eval, Parse};
+use crate::{binding::Binding, expr::Expr, func::FuncDef, Eval, Parse};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
     Binding(Binding),
     Expr(Expr),
+    Func(FuncDef),
 }
 
 impl Parse for Stmt {
@@ -11,6 +12,7 @@ impl Parse for Stmt {
         Binding::parse(s)
             .map(|(s, p)| (s, Self::Binding(p)))
             .or_else(|_| Expr::parse(s).map(|(s, p)| (s, Self::Expr(p))))
+            .or_else(|_| FuncDef::parse(s).map(|(s, p)| (s, Self::Func(p))))
     }
 }
 
@@ -19,13 +21,14 @@ impl Eval for Stmt {
         match self {
             Self::Binding(b) => b.eval(env),
             Self::Expr(e) => e.eval(env),
+            Self::Func(f) => todo!(),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{binding::Binding, env::Env, stmt::Stmt, val::Val, Eval};
+    use crate::{binding::Binding, env::Env, func::FuncDef, stmt::Stmt, val::Val, Eval, Parse};
 
     #[test]
     fn eval_binding_stmt() {
@@ -36,6 +39,23 @@ mod tests {
             ))
             .eval(&mut Env::new()),
             Ok(Val::Unit)
+        )
+    }
+
+    #[test]
+    fn parse_func() {
+        assert_eq!(
+            Stmt::parse("func fn(x) => { x }"),
+            Ok((
+                "".into(),
+                Stmt::Func(FuncDef {
+                    id: "fn".into(),
+                    params: vec!["x".into()],
+                    body: crate::expr::Expr::BindingRef(crate::binding::BindingRef {
+                        id: "x".into()
+                    })
+                })
+            ))
         )
     }
 }
