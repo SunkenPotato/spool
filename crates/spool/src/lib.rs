@@ -8,6 +8,7 @@ pub(crate) mod binding;
 pub(crate) mod block;
 pub(crate) mod env;
 pub(crate) mod expr;
+mod fn_call;
 pub mod func;
 pub(crate) mod lit;
 pub(crate) mod stmt;
