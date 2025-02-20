@@ -26,4 +26,4 @@ $~ ./install.sh
 ```
 
 > [!WARNING]
-> The installation script has only been tested on Linux. There is no guarantee that it will work on other operating systems.
+> The installation script has only been tested on Linux & macOS. There is no guarantee that it will work on other operating systems.
