@@ -91,7 +91,13 @@ fn main() -> io::Result<()> {
 }
 
 fn greeting(stdout: &mut Stdout) -> io::Result<()> {
-    write!(stdout, "Spool {} on {}\n", VERSION, std::env::consts::OS)?;
+    write!(
+        stdout,
+        "Spool CLI {} on {} (parser version: {})\n",
+        VERSION,
+        std::env::consts::OS,
+        spool::VERSION
+    )?;
     write!(stdout, "Type '/help' for a list of commands\n")?;
 
     Ok(())

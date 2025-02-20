@@ -1,3 +1,4 @@
+use binding::Identifier;
 pub use env::Env;
 use stmt::Stmt;
 
@@ -8,10 +9,15 @@ pub(crate) mod binding;
 pub(crate) mod block;
 pub(crate) mod env;
 pub(crate) mod expr;
+mod fn_call;
+pub mod func;
 pub(crate) mod lit;
 pub(crate) mod stmt;
 pub(crate) mod utils;
 pub(crate) mod val;
+
+const KEYWORDS: &[&str] = &["func", "bind"];
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseError {
@@ -28,7 +34,9 @@ pub trait Parse: Sized {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EvalError {
-    IdentifierNotFound,
+    IdentifierNotFound(Identifier),
+    InvalidStoredType,
+    InvalidArgumentLen,
     InvalidType { expected: String, received: String },
 }
 
