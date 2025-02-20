@@ -85,7 +85,7 @@ impl Command {
 pub(super) fn register_default_commands(reg: &mut CommandRegistry) {
     let exit_command = Command::new("exit", |_, _| CommandReturns::Exit);
     let clr_env_cmd = Command::new("clr-env", |state, _| {
-        state.env.bindings.clear();
+        state.env.store.clear();
         CommandReturns::None
     });
 

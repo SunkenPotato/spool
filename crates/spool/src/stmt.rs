@@ -21,7 +21,7 @@ impl Eval for Stmt {
         match self {
             Self::Binding(b) => b.eval(env),
             Self::Expr(e) => e.eval(env),
-            Self::Func(f) => todo!(),
+            Self::Func(f) => f.eval(env),
         }
     }
 }
