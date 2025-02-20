@@ -1,6 +1,7 @@
 use crate::{
     binding::BindingRef,
     block::Block,
+    fn_call::FuncCall,
     lit::{LitReal, Literal, Op},
     val::Val,
     Eval, EvalError, Parse,
@@ -62,13 +63,15 @@ pub enum Expr {
     Simple(Literal),
     MathExpr(Box<MathExpr>),
     BindingRef(BindingRef),
+    FuncCall(FuncCall),
     Block(Block),
 }
 
 impl Parse for Expr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        MathExpr::parse(s)
-            .map(|(s, p)| (s, Self::MathExpr(p.into())))
+        FuncCall::parse(s)
+            .map(|(s, p)| (s, Self::FuncCall(p)))
+            .or_else(|_| MathExpr::parse(s).map(|(s, p)| (s, Self::MathExpr(p.into()))))
             .or_else(|_| Literal::parse(s).map(|(s, p)| (s, Self::Simple(p))))
             .or_else(|_| BindingRef::parse(s).map(|(s, p)| (s, Self::BindingRef(p))))
             .or_else(|_| Block::parse(s).map(|(s, p)| (s, Self::Block(p))))
@@ -82,6 +85,7 @@ impl Eval for Expr {
             Self::MathExpr(expr) => expr.eval(env),
             Self::BindingRef(b_ref) => b_ref.eval(env),
             Self::Block(block) => block.eval(env),
+            Self::FuncCall(fnc) => fnc.eval(env),
         }
     }
 }
@@ -92,6 +96,7 @@ mod tests {
         binding::{Binding, BindingRef},
         env::Env,
         expr::{Expr, MathExpr},
+        fn_call::FuncCall,
         lit::{LitReal, LitStr, Op},
         val::Val,
         Eval, Parse,
@@ -197,6 +202,20 @@ mod tests {
             )
             .eval(&mut env),
             Ok(Val::Real(29.))
+        )
+    }
+
+    #[test]
+    fn parse_fn_call() {
+        assert_eq!(
+            Expr::parse("test(hello, world)"),
+            Ok((
+                "".into(),
+                Expr::FuncCall(FuncCall {
+                    callee: "test".into(),
+                    params: vec!["hello".into(), "world".into()]
+                })
+            ))
         )
     }
 }

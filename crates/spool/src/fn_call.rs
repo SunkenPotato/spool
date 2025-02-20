@@ -6,8 +6,8 @@ use crate::{
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FuncCall {
-    callee: Identifier,
-    params: Vec<Identifier>,
+    pub(crate) callee: Identifier,
+    pub(crate) params: Vec<Identifier>,
 }
 
 impl Parse for FuncCall {
@@ -67,6 +67,20 @@ mod tests {
                 FuncCall {
                     callee: "test".into(),
                     params: vec!["hello".into()]
+                }
+            ))
+        )
+    }
+
+    #[test]
+    fn parse_fn_call_multiple_params() {
+        assert_eq!(
+            FuncCall::parse("test(hello, world)"),
+            Ok((
+                "".into(),
+                FuncCall {
+                    callee: "test".into(),
+                    params: vec!["hello".into(), "world".into()]
                 }
             ))
         )
