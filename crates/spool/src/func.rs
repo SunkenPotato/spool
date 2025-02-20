@@ -49,6 +49,7 @@ impl Parse for FuncDef {
 impl Eval for FuncDef {
     #[allow(unused)]
     fn eval(&self, env: &mut crate::Env) -> Result<crate::val::Val, crate::EvalError> {
+        env.store_func(self.id.clone(), self.params.clone(), self.body.clone());
         Ok(Val::Unit)
     }
 }

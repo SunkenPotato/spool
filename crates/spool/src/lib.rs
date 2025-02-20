@@ -35,6 +35,7 @@ pub trait Parse: Sized {
 pub enum EvalError {
     IdentifierNotFound(Identifier),
     InvalidStoredType,
+    InvalidArgumentLen,
     InvalidType { expected: String, received: String },
 }
 

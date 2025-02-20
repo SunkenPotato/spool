@@ -43,13 +43,10 @@ impl Eval for Block {
         let all_but_last = &self.stmts[..self.stmts.len() - 1];
 
         for stmt in all_but_last {
-            if let Stmt::Binding(b) = stmt {
-                b.eval(&mut this_env)?;
-            }
+            stmt.eval(&mut this_env)?;
         }
 
         let last = self.stmts.last().unwrap(); // this is ok because we checked if it's empty at the beginning
-
         Ok(last.eval(&mut this_env)?)
     }
 }

@@ -213,7 +213,10 @@ mod tests {
                 "".into(),
                 Expr::FuncCall(FuncCall {
                     callee: "test".into(),
-                    params: vec!["hello".into(), "world".into()]
+                    params: vec![
+                        Expr::BindingRef(BindingRef { id: "hello".into() }),
+                        Expr::BindingRef(BindingRef { id: "world".into() })
+                    ]
                 })
             ))
         )

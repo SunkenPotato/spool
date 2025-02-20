@@ -10,8 +10,8 @@ pub enum Storeable {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct NamelessFunction {
-    params: Vec<Identifier>,
-    body: Expr,
+    pub(crate) params: Vec<Identifier>,
+    pub(crate) body: Expr,
 }
 
 #[derive(Debug, Default, Clone)]
