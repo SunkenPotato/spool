@@ -1,3 +1,4 @@
+use binding::Identifier;
 pub use env::Env;
 use stmt::Stmt;
 
@@ -32,7 +33,7 @@ pub trait Parse: Sized {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EvalError {
-    IdentifierNotFound,
+    IdentifierNotFound(Identifier),
     InvalidStoredType,
     InvalidType { expected: String, received: String },
 }

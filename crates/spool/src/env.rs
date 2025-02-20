@@ -44,7 +44,7 @@ impl<'p> Env<'p> {
             },
             None => match self.parent {
                 Some(v) => v.get_stored_binding(id),
-                None => Err(EvalError::IdentifierNotFound),
+                None => Err(EvalError::IdentifierNotFound(id.clone())),
             },
         }
     }
@@ -62,7 +62,7 @@ impl<'p> Env<'p> {
             },
             None => match self.parent {
                 Some(v) => v.get_stored_func(id),
-                None => Err(EvalError::IdentifierNotFound),
+                None => Err(EvalError::IdentifierNotFound(id.clone())),
             },
         }
     }
