@@ -5,7 +5,13 @@ use crate::{binding::Identifier, expr::Expr, val::Val, EvalError};
 #[derive(Debug, PartialEq, Clone)]
 pub enum Storeable {
     Binding(Val),
-    Func { params: Vec<Identifier>, body: Expr },
+    Func(NamelessFunction),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct NamelessFunction {
+    params: Vec<Identifier>,
+    body: Expr,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -44,6 +50,20 @@ impl<'p> Env<'p> {
     }
 
     pub fn store_func(&mut self, id: Identifier, params: Vec<Identifier>, body: Expr) {
-        self.store.insert(id, Storeable::Func { params, body });
+        self.store
+            .insert(id, Storeable::Func(NamelessFunction { params, body }));
+    }
+
+    pub fn get_stored_func(&self, id: &Identifier) -> Result<NamelessFunction, EvalError> {
+        match self.store.get(id).cloned() {
+            Some(v) => match v {
+                Storeable::Func(v) => Ok(v),
+                _ => Err(EvalError::InvalidStoredType),
+            },
+            None => match self.parent {
+                Some(v) => v.get_stored_func(id),
+                None => Err(EvalError::IdentifierNotFound),
+            },
+        }
     }
 }
