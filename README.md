@@ -9,7 +9,7 @@ A dynamically typed, interpreted language written in Rust.
 - [x] CLI
 - [ ] Order of Operations
 - [ ] Booleans
-- [ ] Functions
+- [x] Functions
 - [ ] Structs
   - [ ] Associated methods
 - [ ] File interpreting
