@@ -1,7 +1,9 @@
 exec_dir="$HOME/.local/bin"
 asset_dir="$HOME/.local/share/spool"
+proj_name="spool"
 
 platform=$(uname -s)
+tmp_dir=$(mktemp -d)
 
 premature_exit() {
     rm -f "$exec_dir/spool"
@@ -12,6 +14,10 @@ err_exit() {
     echo "Error: $1" >&2
     premature_exit
     exit 1
+}
+
+clone_repo() {
+    git clone "https://github.com/SunkenPotato/spool" > /dev/null
 }
 
 # Linux functions
@@ -36,6 +42,10 @@ linux() {
         echo "Installation aborted."
         exit 0
     fi
+
+    cd $tmp_dir
+    clone_repo
+    cd $proj_name
 
     echo "Building binary..."
     cargo build --release --quiet --bin cli > /dev/null || err_exit "Failed to build spool"
@@ -63,12 +73,11 @@ uninstall_linux() {
     exit 0
 }
 
-
 # macOS functions
 macos() {
     which spool > /dev/null
     if [ $? -eq 0 ]; then
-        echo "Spool was detected on this system. Do you want to [u]ninstall, [r]einstall it, or [q]uit the installation?"
+        echo "Spool was detected on this system. Do you want to [u]ninstall, [r]einstall/update it, or [q]uit the installation?"
         read -p "[u/r/q]: " choice
         case "$choice" in
             u) uninstall_macos ;;
@@ -80,12 +89,17 @@ macos() {
 
     trap premature_exit INT TERM
 
+
     echo "Do you want to continue? [y/N]"
     read -p "[y/N]: " choice
     if [ "$choice" != "y" ]; then
         echo "Installation aborted."
         exit 0
     fi
+
+    cd $tmp_dir
+    clone_repo
+    cd $proj_name
 
     echo "Building binary..."
     cargo build --release --quiet --bin cli > /dev/null || err_exit "Failed to build spool"
