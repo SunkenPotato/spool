@@ -18,11 +18,11 @@ A dynamically typed, interpreted language written in Rust.
 The wiki page is available [here](https://github.com/SunkenPotato/spool/wiki/)
 
 ## Download / Usage
-You can install spool by cloning the repository and running the installation script:
+You can install spool by downloading and running the installation script:
 ```sh
-$~ git clone https://github.com/SunkenPotato/spool.git
-$~ cd spool
-$~ ./install.sh
+curl --output installer.sh "https://raw.githubusercontent.com/SunkenPotato/spool/refs/heads/main/installer.sh"
+chmod +x installer.sh
+./installer.sh
 ```
 
 > [!WARNING]
