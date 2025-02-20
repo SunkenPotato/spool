@@ -2,6 +2,7 @@ use crate::{
     binding::Identifier,
     expr::Expr,
     utils::{extract_whitespace, tag},
+    val::Val,
     Eval, Parse,
 };
 
@@ -48,13 +49,13 @@ impl Parse for FuncDef {
 impl Eval for FuncDef {
     #[allow(unused)]
     fn eval(&self, env: &mut crate::Env) -> Result<crate::val::Val, crate::EvalError> {
-        todo!()
+        Ok(Val::Unit)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{func::FuncDef, Parse};
+    use crate::{func::FuncDef, val::Val, Env, Eval, Parse};
 
     #[test]
     fn parse() {
@@ -70,6 +71,19 @@ mod tests {
                     })
                 }
             ))
+        )
+    }
+
+    #[test]
+    fn eval_func_def() {
+        assert_eq!(
+            FuncDef {
+                id: "x".into(),
+                params: vec![],
+                body: crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+            }
+            .eval(&mut Env::new()),
+            Ok(Val::Unit)
         )
     }
 }
