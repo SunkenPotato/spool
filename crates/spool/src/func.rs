@@ -1,9 +1,9 @@
 use crate::{
+    Eval, Parse,
     binding::Identifier,
     expr::Expr,
     utils::{extract_whitespace, tag},
     val::Val,
-    Eval, Parse,
 };
 
 const FUNC_KW: &str = "func";
@@ -56,7 +56,7 @@ impl Eval for FuncDef {
 
 #[cfg(test)]
 mod tests {
-    use crate::{func::FuncDef, val::Val, Env, Eval, Parse};
+    use crate::{Env, Eval, Parse, func::FuncDef, val::Val};
 
     #[test]
     fn parse() {
@@ -67,7 +67,7 @@ mod tests {
                 FuncDef {
                     id: "fn".into(),
                     params: vec!["x".into()],
-                    body: crate::expr::Expr::BindingRef(crate::binding::BindingRef {
+                    body: crate::expr::Expr::binding_ref(crate::binding::BindingRef {
                         id: "x".into()
                     })
                 }
@@ -81,7 +81,7 @@ mod tests {
             FuncDef {
                 id: "x".into(),
                 params: vec![],
-                body: crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                body: crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
             }
             .eval(&mut Env::new()),
             Ok(Val::Unit)
