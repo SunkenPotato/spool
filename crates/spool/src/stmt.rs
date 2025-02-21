@@ -1,4 +1,4 @@
-use crate::{binding::Binding, expr::Expr, func::FuncDef, Eval, Parse};
+use crate::{Eval, Parse, binding::Binding, expr::Expr, func::FuncDef};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
@@ -28,14 +28,14 @@ impl Eval for Stmt {
 
 #[cfg(test)]
 mod tests {
-    use crate::{binding::Binding, env::Env, func::FuncDef, stmt::Stmt, val::Val, Eval, Parse};
+    use crate::{Eval, Parse, binding::Binding, env::Env, func::FuncDef, stmt::Stmt, val::Val};
 
     #[test]
     fn eval_binding_stmt() {
         assert_eq!(
             Stmt::Binding(Binding::new(
                 "x".into(),
-                crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(0.)))
+                crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(0.)))
             ))
             .eval(&mut Env::new()),
             Ok(Val::Unit)
@@ -51,7 +51,7 @@ mod tests {
                 Stmt::Func(FuncDef {
                     id: "fn".into(),
                     params: vec!["x".into()],
-                    body: crate::expr::Expr::BindingRef(crate::binding::BindingRef {
+                    body: crate::expr::Expr::binding_ref(crate::binding::BindingRef {
                         id: "x".into()
                     })
                 })

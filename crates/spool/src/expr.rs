@@ -1,10 +1,11 @@
 use crate::{
+    Eval, EvalError, Parse, ParseError,
     binding::BindingRef,
     block::Block,
     fn_call::FuncCall,
     lit::{LitReal, Literal, Op},
+    utils::extract_whitespace,
     val::Val,
-    Eval, EvalError, Parse,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -17,8 +18,8 @@ pub struct MathExpr {
 impl Parse for MathExpr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         let (s, lhs) = BindingRef::parse(s)
-            .map(|(s, p)| (s, Expr::BindingRef(p)))
-            .or_else(|_| LitReal::parse(s).map(|(s, p)| (s, Expr::Simple(Literal::Real(p)))))?;
+            .map(|(s, p)| (s, Expr::binding_ref(p)))
+            .or_else(|_| LitReal::parse(s).map(|(s, p)| (s, Expr::simple(Literal::Real(p)))))?;
 
         let (s, op) = Op::parse(&s)?;
         let (s, rhs) = Expr::parse(&s)?;
@@ -35,7 +36,7 @@ impl Eval for MathExpr {
                 return Err(EvalError::InvalidType {
                     expected: "a real number".into(),
                     received: v.get_type().into(),
-                })
+                });
             }
         };
 
@@ -45,7 +46,7 @@ impl Eval for MathExpr {
                 return Err(EvalError::InvalidType {
                     expected: "a real number".into(),
                     received: v.get_type().into(),
-                })
+                });
             }
         };
 
@@ -59,7 +60,7 @@ impl Eval for MathExpr {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Expr {
+enum InnerExpr {
     Simple(Literal),
     MathExpr(Box<MathExpr>),
     BindingRef(BindingRef),
@@ -67,7 +68,7 @@ pub enum Expr {
     Block(Block),
 }
 
-impl Parse for Expr {
+impl Parse for InnerExpr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
         FuncCall::parse(s)
             .map(|(s, p)| (s, Self::FuncCall(p)))
@@ -78,7 +79,7 @@ impl Parse for Expr {
     }
 }
 
-impl Eval for Expr {
+impl Eval for InnerExpr {
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         match self {
             Self::Simple(lit) => lit.eval(env),
@@ -90,16 +91,111 @@ impl Eval for Expr {
     }
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Expr {
+    negate: Option<Negate>,
+    inner: InnerExpr,
+}
+
+impl Expr {
+    pub fn simple(lit: Literal) -> Self {
+        Self {
+            negate: None,
+            inner: InnerExpr::Simple(lit),
+        }
+    }
+
+    pub fn math_expr(me: Box<MathExpr>) -> Self {
+        Self {
+            negate: None,
+            inner: InnerExpr::MathExpr(me),
+        }
+    }
+
+    pub fn binding_ref(b_ref: BindingRef) -> Self {
+        Self {
+            negate: None,
+            inner: InnerExpr::BindingRef(b_ref),
+        }
+    }
+
+    pub fn func_call(call: FuncCall) -> Self {
+        Self {
+            negate: None,
+            inner: InnerExpr::FuncCall(call),
+        }
+    }
+
+    pub fn block(block: Block) -> Self {
+        Self {
+            negate: None,
+            inner: InnerExpr::Block(block),
+        }
+    }
+
+    pub fn negate(&mut self) {
+        self.negate = Some(Negate);
+    }
+}
+
+impl Parse for Expr {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
+        let negate_out = Negate::parse(s);
+        let (s, negate) = (negate_out.0, negate_out.1.ok());
+        let (s, inner) = InnerExpr::parse(&s)?;
+
+        Ok((s, Self { inner, negate }))
+    }
+}
+
+impl Eval for Expr {
+    fn eval(&self, env: &mut crate::Env) -> Result<Val, EvalError> {
+        let expr_val = self.inner.eval(env)?;
+        Ok(match expr_val {
+            Val::Bool(b) => Val::Bool(!b),
+            v => v,
+        })
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Negate;
+
+impl Negate {
+    fn parse(s: &str) -> (String, Result<Self, ParseError>) {
+        let (_, s) = extract_whitespace(s);
+        match s.chars().next() {
+            Some(v) => match v {
+                '!' => (s[0..].into(), Ok(Self)),
+                e => (
+                    s,
+                    Err(crate::ParseError::InvalidSequence {
+                        expected: '!'.into(),
+                        received: e.into(),
+                    }),
+                ),
+            },
+            None => (
+                s,
+                Err(crate::ParseError::SequenceNotFound {
+                    expected: '!'.into(),
+                    received: "".into(),
+                }),
+            ),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
+        Eval, Parse,
         binding::{Binding, BindingRef},
         env::Env,
         expr::{Expr, MathExpr},
         fn_call::FuncCall,
         lit::{LitReal, LitStr, Op},
         val::Val,
-        Eval, Parse,
     };
 
     #[test]
@@ -108,7 +204,7 @@ mod tests {
             Expr::parse("\"Hello, world\""),
             Ok((
                 "".into(),
-                Expr::Simple(crate::lit::Literal::Str(LitStr("Hello, world".into())))
+                Expr::simple(crate::lit::Literal::Str(LitStr("Hello, world".into())))
             ))
         )
     }
@@ -119,11 +215,11 @@ mod tests {
             Expr::parse("5 * 5"),
             Ok((
                 "".into(),
-                Expr::MathExpr(
+                Expr::math_expr(
                     crate::expr::MathExpr {
-                        lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                        lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                         op: Op::Mul,
-                        rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                        rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
                     }
                     .into()
                 )
@@ -134,7 +230,7 @@ mod tests {
     #[test]
     fn eval_simple_expr() {
         assert_eq!(
-            Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))).eval(&mut Env::new()),
+            Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))).eval(&mut Env::new()),
             Ok(Val::Real(5.))
         )
     }
@@ -143,9 +239,9 @@ mod tests {
     fn eval_math_expr() {
         assert_eq!(
             crate::expr::MathExpr {
-                lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                 op: Op::Mul,
-                rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(6.)))
+                rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(6.)))
             }
             .eval(&mut Env::new()),
             Ok(Val::Real(30.))
@@ -158,11 +254,11 @@ mod tests {
 
         let _ = Binding::new(
             "x".into(),
-            Expr::MathExpr(
+            Expr::math_expr(
                 crate::expr::MathExpr {
-                    lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                     op: Op::Mul,
-                    rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                 }
                 .into(),
             ),
@@ -170,7 +266,7 @@ mod tests {
         .eval(&mut env);
 
         assert_eq!(
-            Expr::BindingRef(BindingRef { id: "x".into() }).eval(&mut env),
+            Expr::binding_ref(BindingRef { id: "x".into() }).eval(&mut env),
             Ok(Val::Real(25.))
         )
     }
@@ -180,11 +276,11 @@ mod tests {
         let mut env = Env::new();
         let _ = Binding::new(
             "x".into(),
-            Expr::MathExpr(
+            Expr::math_expr(
                 crate::expr::MathExpr {
-                    lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                     op: Op::Mul,
-                    rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                    rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                 }
                 .into(),
             ),
@@ -192,11 +288,11 @@ mod tests {
         .eval(&mut env);
 
         assert_eq!(
-            Expr::MathExpr(
+            Expr::math_expr(
                 MathExpr {
-                    lhs: Expr::BindingRef(BindingRef { id: "x".into() }),
+                    lhs: Expr::binding_ref(BindingRef { id: "x".into() }),
                     op: Op::Add,
-                    rhs: Expr::Simple(crate::lit::Literal::Real(LitReal(4.)))
+                    rhs: Expr::simple(crate::lit::Literal::Real(LitReal(4.)))
                 }
                 .into()
             )
@@ -211,14 +307,28 @@ mod tests {
             Expr::parse("test(hello, world)"),
             Ok((
                 "".into(),
-                Expr::FuncCall(FuncCall {
+                Expr::func_call(FuncCall {
                     callee: "test".into(),
                     params: vec![
-                        Expr::BindingRef(BindingRef { id: "hello".into() }),
-                        Expr::BindingRef(BindingRef { id: "world".into() })
+                        Expr::binding_ref(BindingRef { id: "hello".into() }),
+                        Expr::binding_ref(BindingRef { id: "world".into() })
                     ]
                 })
             ))
+        )
+    }
+
+    #[test]
+    fn negate_expr() {
+        assert_eq!(
+            Expr {
+                negate: Some(crate::expr::Negate),
+                inner: crate::expr::InnerExpr::Simple(crate::lit::Literal::Bool(
+                    crate::lit::LitBool(true)
+                ))
+            }
+            .eval(&mut Env::new()),
+            Ok(Val::Bool(false))
         )
     }
 }

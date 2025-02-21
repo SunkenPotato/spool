@@ -1,7 +1,7 @@
 use crate::{
+    Eval, KEYWORDS, Parse, ParseError,
     expr::Expr,
     utils::{extract_ident, extract_whitespace, tag},
-    Eval, Parse, ParseError, KEYWORDS,
 };
 
 const BIND_TOKEN: &str = "bind";
@@ -93,10 +93,10 @@ impl Eval for BindingRef {
 #[cfg(test)]
 mod tests {
     use crate::{
+        Eval, Parse,
         binding::{Binding, BindingRef},
         env::Env,
         val::Val,
-        Eval, Parse,
     };
 
     #[test]
@@ -107,7 +107,7 @@ mod tests {
                 "".into(),
                 Binding::new(
                     crate::binding::Identifier("x".into()),
-                    crate::expr::Expr::Simple(crate::lit::Literal::Str("Hello, world".into()))
+                    crate::expr::Expr::simple(crate::lit::Literal::Str("Hello, world".into()))
                 )
             ))
         )
@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(
             Binding::new(
                 "x".into(),
-                crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
             )
             .eval(&mut Env::new())
             .unwrap(),
