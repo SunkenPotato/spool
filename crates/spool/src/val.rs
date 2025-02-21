@@ -2,6 +2,7 @@
 pub enum Val {
     Str(String),
     Real(f32),
+    Bool(bool),
     Unit,
 }
 
@@ -11,6 +12,7 @@ impl Val {
             Self::Str(_) => "String",
             Self::Unit => "()",
             Self::Real(_) => "Real number",
+            Self::Bool(_) => "Boolean",
         }
     }
 }
