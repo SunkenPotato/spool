@@ -166,7 +166,7 @@ impl Negate {
         let (_, s) = extract_whitespace(s);
         match s.chars().next() {
             Some(v) => match v {
-                '!' => (s[0..].into(), Ok(Self)),
+                '!' => (s[1..].into(), Ok(Self)),
                 e => (
                     s,
                     Err(crate::ParseError::InvalidSequence {
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn negate_expr() {
+    fn eval_negate_expr() {
         assert_eq!(
             Expr {
                 negate: Some(crate::expr::Negate),
@@ -329,6 +329,22 @@ mod tests {
             }
             .eval(&mut Env::new()),
             Ok(Val::Bool(false))
+        )
+    }
+
+    #[test]
+    fn parse_negated_bool() {
+        assert_eq!(
+            Expr::parse("!true"),
+            Ok((
+                "".into(),
+                Expr {
+                    negate: Some(crate::expr::Negate),
+                    inner: crate::expr::InnerExpr::Simple(crate::lit::Literal::Bool(
+                        crate::lit::LitBool(true)
+                    ))
+                }
+            ))
         )
     }
 }
