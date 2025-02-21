@@ -16,7 +16,7 @@ pub(crate) mod stmt;
 pub(crate) mod utils;
 pub(crate) mod val;
 
-const KEYWORDS: &[&str] = &["func", "bind"];
+const KEYWORDS: &[&str] = &["func", "bind", "final"];
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, PartialEq, Eq, Clone)]

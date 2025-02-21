@@ -34,6 +34,7 @@ mod tests {
     fn eval_binding_stmt() {
         assert_eq!(
             Stmt::Binding(Binding::new(
+                None,
                 "x".into(),
                 crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(0.)))
             ))
