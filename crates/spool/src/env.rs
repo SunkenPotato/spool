@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{binding::Identifier, expr::Expr, val::Val, EvalError};
+use crate::{EvalError, binding::Identifier, expr::Expr, val::Val};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Storeable {
-    Binding(Val),
+    Binding(Val, bool),
     Func(NamelessFunction),
 }
 
@@ -32,14 +32,34 @@ impl<'p> Env<'p> {
         }
     }
 
-    pub fn store_binding(&mut self, id: Identifier, val: Val) {
-        self.store.insert(id, Storeable::Binding(val));
+    pub fn store_binding(&mut self, id: Identifier, val: Val, immutable: bool) {
+        self.store.insert(id, Storeable::Binding(val, immutable));
     }
 
-    pub fn get_stored_binding(&self, id: &Identifier) -> Result<Val, EvalError> {
+    pub fn reassign_binding(&mut self, id: Identifier, val: Val) -> Result<(), EvalError> {
+        let Some(previous) = self.store.get(&id) else {
+            return Err(EvalError::IdentifierNotFound(id));
+        };
+
+        let Storeable::Binding(_, f) = previous else {
+            return Err(EvalError::InvalidType {
+                expected: "binding".into(),
+                received: "function".into(),
+            });
+        };
+
+        if *f {
+            return Err(EvalError::ImmutableReassignment(id));
+        }
+
+        self.store.insert(id, Storeable::Binding(val, *f));
+        Ok(())
+    }
+
+    pub fn get_stored_binding(&self, id: &Identifier) -> Result<(Val, bool), EvalError> {
         match self.store.get(id).cloned() {
             Some(v) => match v {
-                Storeable::Binding(v) => Ok(v),
+                Storeable::Binding(v, f) => Ok((v, f)),
                 _ => Err(EvalError::InvalidStoredType),
             },
             None => match self.parent {

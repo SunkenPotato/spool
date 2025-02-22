@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn eval_stmt_external_env() {
         let mut external_env = Env::new();
-        external_env.store_binding("outer".into(), Val::Real(3.14159));
+        external_env.store_binding("outer".into(), Val::Real(3.14159), false);
 
         assert_eq!(
             Block {

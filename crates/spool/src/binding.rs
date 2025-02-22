@@ -94,7 +94,7 @@ impl Eval for Binding {
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
         let val = self.expr.eval(env)?;
 
-        env.store_binding(self.ident.clone(), val);
+        env.store_binding(self.ident.clone(), val, self.immutable.is_some());
         Ok(crate::val::Val::Unit)
     }
 }
@@ -114,7 +114,7 @@ impl Parse for BindingRef {
 impl Eval for BindingRef {
     #[inline]
     fn eval(&self, env: &mut crate::env::Env) -> Result<crate::val::Val, crate::EvalError> {
-        env.get_stored_binding(&self.id)
+        env.get_stored_binding(&self.id).map(|(v, _)| v)
     }
 }
 
@@ -125,6 +125,8 @@ mod tests {
         binding::{Binding, BindingRef},
         env::Env,
         expr::Expr,
+        lit::LitBool,
+        reassignment::Reassignment,
         val::Val,
     };
 
@@ -161,7 +163,7 @@ mod tests {
     fn eval_binding_ref() {
         let mut env = Env::new();
 
-        env.store_binding("x".into(), Val::Real(5.));
+        env.store_binding("x".into(), Val::Real(5.), false);
 
         assert_eq!(
             BindingRef { id: "x".into() }.eval(&mut env),
@@ -181,6 +183,21 @@ mod tests {
                     expr: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
                 }
             ))
+        )
+    }
+
+    #[test]
+    fn do_not_reassign_immutable() {
+        let mut env = Env::new();
+        env.store_binding("x".into(), Val::Bool(false), true);
+
+        assert_eq!(
+            Reassignment {
+                lhs: "x".into(),
+                rhs: Expr::simple(crate::lit::Literal::Bool(LitBool(true)))
+            }
+            .eval(&mut env),
+            Err(crate::EvalError::ImmutableReassignment("x".into()))
         )
     }
 }
