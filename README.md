@@ -8,7 +8,7 @@ A dynamically typed, interpreted language written in Rust.
 - [x] Binding references
 - [x] CLI
 - [ ] Order of Operations
-- [ ] Booleans
+- [x] Booleans
 - [x] Functions
 - [ ] Structs
   - [ ] Associated methods
