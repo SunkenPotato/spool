@@ -28,7 +28,12 @@ impl Parse for Reassignment {
 
 impl Eval for Reassignment {
     fn eval(&self, env: &mut crate::Env) -> Result<crate::val::Val, crate::EvalError> {
-        todo!()
+        env.get_stored_binding(&self.lhs)?;
+
+        let rhs_val = self.rhs.eval(env)?;
+        env.store_binding(self.lhs.clone(), rhs_val);
+
+        Ok(crate::val::Val::Unit)
     }
 }
 
