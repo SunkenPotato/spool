@@ -71,6 +71,7 @@ mod tests {
                 "".into(),
                 Block {
                     stmts: vec![Stmt::Binding(Binding::new(
+                        None,
                         "x".into(),
                         crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(
                             5.
@@ -90,12 +91,14 @@ mod tests {
                 Block {
                     stmts: vec![
                         Stmt::Binding(Binding::new(
+                            None,
                             "x".into(),
                             crate::expr::Expr::simple(crate::lit::Literal::Real(
                                 crate::lit::LitReal(5.)
                             ))
                         )),
                         Stmt::Binding(Binding::new(
+                            None,
                             "y".into(),
                             crate::expr::Expr::binding_ref(crate::binding::BindingRef {
                                 id: "x".into()
@@ -142,6 +145,7 @@ mod tests {
             Block {
                 stmts: vec![
                     Stmt::Binding(Binding::new(
+                        None,
                         "e".into(),
                         Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(2.71828)))
                     )),

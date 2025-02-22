@@ -1,10 +1,11 @@
-use crate::{Eval, Parse, binding::Binding, expr::Expr, func::FuncDef};
+use crate::{Eval, Parse, binding::Binding, expr::Expr, func::FuncDef, reassignment::Reassignment};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
     Binding(Binding),
     Expr(Expr),
     Func(FuncDef),
+    Reassignment(Reassignment),
 }
 
 impl Parse for Stmt {
@@ -22,6 +23,7 @@ impl Eval for Stmt {
             Self::Binding(b) => b.eval(env),
             Self::Expr(e) => e.eval(env),
             Self::Func(f) => f.eval(env),
+            Self::Reassignment(r) => r.eval(env),
         }
     }
 }
@@ -34,6 +36,7 @@ mod tests {
     fn eval_binding_stmt() {
         assert_eq!(
             Stmt::Binding(Binding::new(
+                None,
                 "x".into(),
                 crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(0.)))
             ))

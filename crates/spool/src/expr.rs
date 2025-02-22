@@ -1,12 +1,14 @@
 use crate::{
-    Eval, EvalError, Parse, ParseError,
+    Eval, EvalError, Parse,
     binding::BindingRef,
     block::Block,
     fn_call::FuncCall,
     lit::{LitReal, Literal, Op},
-    utils::extract_whitespace,
+    utils::tag,
     val::Val,
 };
+
+const NEGATE_SYMBOL: &str = "!";
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct MathExpr {
@@ -140,8 +142,7 @@ impl Expr {
 
 impl Parse for Expr {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        let negate_out = Negate::parse(s);
-        let (s, negate) = (negate_out.0, negate_out.1.ok());
+        let (s, negate) = Negate::parse(s).unwrap();
         let (s, inner) = InnerExpr::parse(&s)?;
 
         Ok((s, Self { inner, negate }))
@@ -158,30 +159,14 @@ impl Eval for Expr {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 pub struct Negate;
 
 impl Negate {
-    fn parse(s: &str) -> (String, Result<Self, ParseError>) {
-        let (_, s) = extract_whitespace(s);
-        match s.chars().next() {
-            Some(v) => match v {
-                '!' => (s[1..].into(), Ok(Self)),
-                e => (
-                    s,
-                    Err(crate::ParseError::InvalidSequence {
-                        expected: '!'.into(),
-                        received: e.into(),
-                    }),
-                ),
-            },
-            None => (
-                s,
-                Err(crate::ParseError::SequenceNotFound {
-                    expected: '!'.into(),
-                    received: "".into(),
-                }),
-            ),
+    fn parse(s: &str) -> crate::ParseOutput<Option<Self>> {
+        match tag(NEGATE_SYMBOL, s) {
+            Ok(v) => Ok((v, Some(Self))),
+            Err(_) => Ok((s.into(), None)),
         }
     }
 }
@@ -253,6 +238,7 @@ mod tests {
         let mut env = Env::new();
 
         let _ = Binding::new(
+            None,
             "x".into(),
             Expr::math_expr(
                 crate::expr::MathExpr {
@@ -275,6 +261,7 @@ mod tests {
     fn eval_ref_math_expr() {
         let mut env = Env::new();
         let _ = Binding::new(
+            None,
             "x".into(),
             Expr::math_expr(
                 crate::expr::MathExpr {

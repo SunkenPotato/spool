@@ -5,7 +5,8 @@ use crate::{
 };
 
 const BIND_TOKEN: &str = "bind";
-const ASSIGN_TOKEN: &str = "=";
+pub const ASSIGN_TOKEN: &str = "=";
+const IMMUTABLE_TOKEN: &str = "final";
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct Identifier(pub String);
@@ -33,16 +34,33 @@ impl From<&'_ str> for Identifier {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct Immutable;
+
+impl Immutable {
+    fn parse(s: &str) -> crate::ParseOutput<Option<Self>> {
+        match tag(IMMUTABLE_TOKEN, s) {
+            Ok(v) => Ok((v, Some(Self))),
+            Err(_) => Ok((s.into(), None)),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Binding {
+    pub immutable: Option<Immutable>,
     pub ident: Identifier,
     pub expr: Expr,
 }
 
+#[cfg(test)]
 impl Binding {
-    #[cfg(test)]
-    pub fn new(ident: Identifier, expr: Expr) -> Self {
-        Self { ident, expr }
+    pub fn new(immutable: Option<Immutable>, ident: Identifier, expr: Expr) -> Self {
+        Self {
+            immutable,
+            ident,
+            expr,
+        }
     }
 }
 
@@ -51,6 +69,9 @@ impl Parse for Binding {
         let (_, s) = extract_whitespace(s);
         let s = tag(BIND_TOKEN, &s)?;
 
+        let (_, s) = extract_whitespace(&s);
+        let (s, immutable) = dbg!(Immutable::parse(&s).unwrap());
+
         let (s, ident) = Identifier::parse(&s)?;
 
         let (_, s) = extract_whitespace(&s);
@@ -58,7 +79,14 @@ impl Parse for Binding {
 
         let (s, expr) = Expr::parse(&s)?;
 
-        Ok((s, Binding { ident, expr }))
+        Ok((
+            s,
+            Binding {
+                immutable,
+                ident,
+                expr,
+            },
+        ))
     }
 }
 
@@ -96,6 +124,7 @@ mod tests {
         Eval, Parse,
         binding::{Binding, BindingRef},
         env::Env,
+        expr::Expr,
         val::Val,
     };
 
@@ -106,6 +135,7 @@ mod tests {
             Ok((
                 "".into(),
                 Binding::new(
+                    None,
                     crate::binding::Identifier("x".into()),
                     crate::expr::Expr::simple(crate::lit::Literal::Str("Hello, world".into()))
                 )
@@ -117,6 +147,7 @@ mod tests {
     fn eval_binding() {
         assert_eq!(
             Binding::new(
+                None,
                 "x".into(),
                 crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
             )
@@ -135,6 +166,21 @@ mod tests {
         assert_eq!(
             BindingRef { id: "x".into() }.eval(&mut env),
             Ok(Val::Real(5.))
+        )
+    }
+
+    #[test]
+    fn parse_immutable_binding() {
+        assert_eq!(
+            Binding::parse("bind final x = 5"),
+            Ok((
+                "".into(),
+                Binding {
+                    immutable: Some(crate::binding::Immutable),
+                    ident: crate::binding::Identifier("x".into()),
+                    expr: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                }
+            ))
         )
     }
 }
