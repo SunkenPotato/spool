@@ -12,6 +12,7 @@ pub(crate) mod expr;
 mod fn_call;
 pub mod func;
 pub(crate) mod lit;
+mod reassignment;
 pub(crate) mod stmt;
 pub(crate) mod utils;
 pub(crate) mod val;
