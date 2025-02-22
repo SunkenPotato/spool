@@ -1,8 +1,8 @@
 use crate::{
+    Env, Eval, Parse,
     binding::Identifier,
     expr::Expr,
     utils::{extract_whitespace, tag},
-    Env, Eval, Parse,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -49,7 +49,7 @@ impl Eval for FuncCall {
         let mut fn_env = Env::new();
 
         for (idx, call_param) in call_params.iter().enumerate() {
-            fn_env.store_binding(fn_params[idx].clone(), call_param.eval(env)?);
+            fn_env.store_binding(fn_params[idx].clone(), call_param.eval(env)?, false); // possibly reconsider this
         }
 
         fn_def.body.eval(&mut fn_env)
@@ -59,6 +59,7 @@ impl Eval for FuncCall {
 #[cfg(test)]
 mod tests {
     use crate::{
+        Env, Eval, Parse,
         binding::BindingRef,
         block::Block,
         expr::{Expr, MathExpr},
@@ -66,7 +67,6 @@ mod tests {
         lit::{LitReal, Literal},
         stmt::Stmt,
         val::Val,
-        Env, Eval, Parse,
     };
 
     #[test]
@@ -91,7 +91,7 @@ mod tests {
                 "".into(),
                 FuncCall {
                     callee: "test".into(),
-                    params: vec![Expr::Simple(Literal::Real(crate::lit::LitReal(5.)))]
+                    params: vec![Expr::simple(Literal::Real(crate::lit::LitReal(5.)))]
                 }
             ))
         )
@@ -106,8 +106,8 @@ mod tests {
                 FuncCall {
                     callee: "test".into(),
                     params: vec![
-                        Expr::BindingRef(BindingRef { id: "hello".into() }),
-                        Expr::BindingRef(BindingRef { id: "world".into() })
+                        Expr::binding_ref(BindingRef { id: "hello".into() }),
+                        Expr::binding_ref(BindingRef { id: "world".into() })
                     ]
                 }
             ))
@@ -122,20 +122,20 @@ mod tests {
                     Stmt::Func(crate::func::FuncDef {
                         id: "testfn".into(),
                         params: vec!["a".into(), "b".into()],
-                        body: crate::expr::Expr::MathExpr(
+                        body: crate::expr::Expr::math_expr(
                             MathExpr {
-                                lhs: crate::expr::Expr::BindingRef(BindingRef { id: "a".into() }),
+                                lhs: crate::expr::Expr::binding_ref(BindingRef { id: "a".into() }),
                                 op: crate::lit::Op::Add,
-                                rhs: crate::expr::Expr::BindingRef(BindingRef { id: "b".into() })
+                                rhs: crate::expr::Expr::binding_ref(BindingRef { id: "b".into() })
                             }
                             .into()
                         )
                     }),
-                    Stmt::Expr(crate::expr::Expr::FuncCall(FuncCall {
+                    Stmt::Expr(crate::expr::Expr::func_call(FuncCall {
                         callee: "testfn".into(),
                         params: vec![
-                            Expr::Simple(Literal::Real(LitReal(5.))),
-                            Expr::Simple(Literal::Real(LitReal(5.)))
+                            Expr::simple(Literal::Real(LitReal(5.))),
+                            Expr::simple(Literal::Real(LitReal(5.)))
                         ]
                     }))
                 ]

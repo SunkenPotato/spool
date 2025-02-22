@@ -1,8 +1,8 @@
 use crate::{
+    Eval, Parse,
     env::Env,
     stmt::Stmt,
     utils::{extract_whitespace, tag},
-    Eval, Parse,
 };
 
 const BLOCK_OPEN: &str = "{";
@@ -54,8 +54,8 @@ impl Eval for Block {
 #[cfg(test)]
 mod tests {
     use crate::{
-        binding::Binding, block::Block, env::Env, expr::Expr, lit::Op, stmt::Stmt, val::Val, Eval,
-        Parse,
+        Eval, Parse, binding::Binding, block::Block, env::Env, expr::Expr, lit::Op, stmt::Stmt,
+        val::Val,
     };
 
     #[test]
@@ -71,8 +71,9 @@ mod tests {
                 "".into(),
                 Block {
                     stmts: vec![Stmt::Binding(Binding::new(
+                        None,
                         "x".into(),
-                        crate::expr::Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(
+                        crate::expr::Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(
                             5.
                         )))
                     ))]
@@ -90,18 +91,20 @@ mod tests {
                 Block {
                     stmts: vec![
                         Stmt::Binding(Binding::new(
+                            None,
                             "x".into(),
-                            crate::expr::Expr::Simple(crate::lit::Literal::Real(
+                            crate::expr::Expr::simple(crate::lit::Literal::Real(
                                 crate::lit::LitReal(5.)
                             ))
                         )),
                         Stmt::Binding(Binding::new(
+                            None,
                             "y".into(),
-                            crate::expr::Expr::BindingRef(crate::binding::BindingRef {
+                            crate::expr::Expr::binding_ref(crate::binding::BindingRef {
                                 id: "x".into()
                             })
                         )),
-                        Stmt::Expr(crate::expr::Expr::BindingRef(crate::binding::BindingRef {
+                        Stmt::Expr(crate::expr::Expr::binding_ref(crate::binding::BindingRef {
                             id: "y".into()
                         }))
                     ]
@@ -122,11 +125,11 @@ mod tests {
     fn eval_single_stmt_block() {
         assert_eq!(
             Block {
-                stmts: vec![Stmt::Expr(crate::expr::Expr::MathExpr(
+                stmts: vec![Stmt::Expr(crate::expr::Expr::math_expr(
                     crate::expr::MathExpr {
-                        lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                        lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                         op: Op::Mul,
-                        rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(4.)))
+                        rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(4.)))
                     }
                     .into()
                 ))]
@@ -142,14 +145,15 @@ mod tests {
             Block {
                 stmts: vec![
                     Stmt::Binding(Binding::new(
+                        None,
                         "e".into(),
-                        Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(2.71828)))
+                        Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(2.71828)))
                     )),
-                    Stmt::Expr(Expr::MathExpr(
+                    Stmt::Expr(Expr::math_expr(
                         crate::expr::MathExpr {
-                            lhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
+                            lhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.))),
                             op: Op::Mul,
-                            rhs: Expr::Simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
+                            rhs: Expr::simple(crate::lit::Literal::Real(crate::lit::LitReal(5.)))
                         }
                         .into()
                     ))
@@ -163,11 +167,11 @@ mod tests {
     #[test]
     fn eval_stmt_external_env() {
         let mut external_env = Env::new();
-        external_env.store_binding("outer".into(), Val::Real(3.14159));
+        external_env.store_binding("outer".into(), Val::Real(3.14159), false);
 
         assert_eq!(
             Block {
-                stmts: vec![Stmt::Expr(Expr::BindingRef(crate::binding::BindingRef {
+                stmts: vec![Stmt::Expr(Expr::binding_ref(crate::binding::BindingRef {
                     id: "outer".into()
                 }))]
             }

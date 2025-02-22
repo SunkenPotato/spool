@@ -12,11 +12,12 @@ pub(crate) mod expr;
 mod fn_call;
 pub mod func;
 pub(crate) mod lit;
+mod reassignment;
 pub(crate) mod stmt;
 pub(crate) mod utils;
 pub(crate) mod val;
 
-const KEYWORDS: &[&str] = &["func", "bind"];
+const KEYWORDS: &[&str] = &["func", "bind", "final"];
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -37,6 +38,7 @@ pub enum EvalError {
     IdentifierNotFound(Identifier),
     InvalidStoredType,
     InvalidArgumentLen,
+    ImmutableReassignment(Identifier),
     InvalidType { expected: String, received: String },
 }
 

@@ -33,7 +33,7 @@ pub fn extract_op(s: &str) -> Result<(String, String), ParseError> {
             return Err(ParseError::SequenceNotFound {
                 expected: "[+, -, *, /]".into(),
                 received: format!("{e:?}"),
-            })
+            });
         }
     };
 

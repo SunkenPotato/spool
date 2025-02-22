@@ -1,6 +1,6 @@
 use crate::{
-    utils::{extract_float, extract_op, extract_string, extract_whitespace},
     Eval, Parse, ParseError,
+    utils::{extract_float, extract_op, extract_string, extract_whitespace},
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -15,30 +15,20 @@ impl Parse for LitStr {
     }
 }
 
+#[cfg(test)]
 impl<'a> From<&'a str> for LitStr {
     fn from(value: &'a str) -> Self {
         Self(value.into())
     }
 }
 
-impl Into<Literal> for LitStr {
-    fn into(self) -> Literal {
-        Literal::Str(self)
-    }
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct LitReal(pub f32);
 
+#[cfg(test)]
 impl From<f32> for LitReal {
     fn from(value: f32) -> Self {
         Self(value)
-    }
-}
-
-impl Into<Literal> for LitReal {
-    fn into(self) -> Literal {
-        Literal::Real(self)
     }
 }
 
@@ -56,9 +46,46 @@ impl Parse for LitReal {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct LitBool(pub bool);
+
+#[cfg(test)]
+impl From<bool> for LitBool {
+    fn from(value: bool) -> Self {
+        Self(value)
+    }
+}
+
+impl Parse for LitBool {
+    fn parse(s: &str) -> crate::ParseOutput<Self> {
+        let (_, s) = extract_whitespace(s);
+        if s.len() < 4 {
+            return Err(ParseError::SequenceNotFound {
+                expected: "boolean sequence".into(),
+                received: s.into(),
+            });
+        }
+
+        let (unparsed, rest) = (&s[..4], &s[4..]);
+        let inner = match unparsed {
+            "true" => true,
+            "false" => false,
+            s => {
+                return Err(ParseError::InvalidSequence {
+                    expected: "true|false".into(),
+                    received: s.into(),
+                });
+            }
+        };
+
+        Ok((rest.into(), Self(inner)))
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Literal {
     Str(LitStr),
     Real(LitReal),
+    Bool(LitBool),
 }
 
 impl Parse for Literal {
@@ -66,6 +93,7 @@ impl Parse for Literal {
         LitReal::parse(s)
             .map(|(s, p)| (s, Self::Real(p)))
             .or_else(|_| LitStr::parse(s).map(|(s, p)| (s, Self::Str(p))))
+            .or_else(|_| LitBool::parse(s).map(|(s, p)| (s, Self::Bool(p))))
     }
 }
 
@@ -74,6 +102,7 @@ impl Eval for Literal {
         Ok(match self {
             Self::Str(s) => crate::val::Val::Str(s.0.clone()),
             Self::Real(r) => crate::val::Val::Real(r.0),
+            Self::Bool(b) => crate::val::Val::Bool(b.0),
         })
     }
 }
@@ -107,9 +136,10 @@ impl Parse for Op {
 #[cfg(test)]
 mod tests {
     use crate::{
+        Eval, Parse,
         env::Env,
         lit::{Literal, Op},
-        Eval, Parse,
+        val::Val,
     };
 
     #[test]
@@ -135,9 +165,27 @@ mod tests {
 
     #[test]
     fn eval_literal() {
+        let mut env = Env::new();
+
         assert_eq!(
-            Literal::Str("Hello, world!".into()).eval(&mut Env::new()),
+            Literal::Str("Hello, world!".into()).eval(&mut env),
             Ok(crate::val::Val::Str("Hello, world!".into()))
+        );
+        assert_eq!(
+            Literal::Real(3.1414723.into()).eval(&mut env),
+            Ok(Val::Real(3.1414723))
+        );
+        assert_eq!(
+            Literal::Bool(true.into()).eval(&mut env),
+            Ok(Val::Bool(true))
+        )
+    }
+
+    #[test]
+    fn parse_bool() {
+        assert_eq!(
+            Literal::parse("true"),
+            Ok(("".into(), Literal::Bool(crate::lit::LitBool(true))))
         )
     }
 }
