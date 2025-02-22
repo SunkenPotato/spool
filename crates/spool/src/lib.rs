@@ -38,6 +38,7 @@ pub enum EvalError {
     IdentifierNotFound(Identifier),
     InvalidStoredType,
     InvalidArgumentLen,
+    ImmutableReassignment(Identifier),
     InvalidType { expected: String, received: String },
 }
 

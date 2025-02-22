@@ -49,7 +49,7 @@ impl Eval for FuncCall {
         let mut fn_env = Env::new();
 
         for (idx, call_param) in call_params.iter().enumerate() {
-            fn_env.store_binding(fn_params[idx].clone(), call_param.eval(env)?);
+            fn_env.store_binding(fn_params[idx].clone(), call_param.eval(env)?, false); // possibly reconsider this
         }
 
         fn_def.body.eval(&mut fn_env)

@@ -7,8 +7,8 @@ use crate::{
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Reassignment {
-    lhs: Identifier,
-    rhs: Expr,
+    pub lhs: Identifier,
+    pub rhs: Expr,
 }
 
 impl Parse for Reassignment {
@@ -31,7 +31,7 @@ impl Eval for Reassignment {
         env.get_stored_binding(&self.lhs)?;
 
         let rhs_val = self.rhs.eval(env)?;
-        env.store_binding(self.lhs.clone(), rhs_val);
+        env.reassign_binding(self.lhs.clone(), rhs_val)?;
 
         Ok(crate::val::Val::Unit)
     }
@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn eval_reassignment() {
         let mut env = Env::new();
-        env.store_binding("x".into(), crate::val::Val::Bool(true));
+        env.store_binding("x".into(), crate::val::Val::Bool(true), false);
 
         let _ = Reassignment {
             lhs: "x".into(),
@@ -81,7 +81,7 @@ mod tests {
 
         assert_eq!(
             env.get_stored_binding(&"x".into()),
-            Ok(crate::val::Val::Bool(true))
+            Ok((crate::val::Val::Bool(true), false))
         )
     }
 }
