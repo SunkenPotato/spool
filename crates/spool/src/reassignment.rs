@@ -1,4 +1,9 @@
-use crate::{Eval, Parse, binding::Identifier, expr::Expr};
+use crate::{
+    Eval, Parse,
+    binding::{ASSIGN_TOKEN, Identifier},
+    expr::Expr,
+    utils::{extract_whitespace, tag},
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Reassignment {
@@ -8,7 +13,16 @@ pub struct Reassignment {
 
 impl Parse for Reassignment {
     fn parse(s: &str) -> crate::ParseOutput<Self> {
-        todo!()
+        let (_, s) = extract_whitespace(s);
+
+        let (s, lhs) = Identifier::parse(&s)?;
+
+        let (_, s) = extract_whitespace(&s);
+        let s = tag(ASSIGN_TOKEN, &s)?;
+
+        let (s, rhs) = Expr::parse(&s)?;
+
+        Ok((s, Self { lhs, rhs }))
     }
 }
 

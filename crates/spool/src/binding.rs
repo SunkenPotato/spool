@@ -5,7 +5,7 @@ use crate::{
 };
 
 const BIND_TOKEN: &str = "bind";
-const ASSIGN_TOKEN: &str = "=";
+pub const ASSIGN_TOKEN: &str = "=";
 const IMMUTABLE_TOKEN: &str = "final";
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
